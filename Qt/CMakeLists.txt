@@ -1,5 +1,10 @@
 SET(Slicer_CMAKE_DIR "${Slicer_SOURCE_DIR}/CMake" CACHE INTERNAL "")
 
+INCLUDE(${Slicer_CMAKE_DIR}/SlicerMacroParseArguments.cmake)
+INCLUDE(${Slicer_CMAKE_DIR}/SlicerMacroBuildModuleLogic.cmake)
+INCLUDE(${Slicer_CMAKE_DIR}/SlicerMacroBuildQtModule.cmake)
+
+
 # --------------------------------------------------------------------------
 # Add subdirectories
 

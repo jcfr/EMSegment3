@@ -26,7 +26,7 @@
 #include "ui_qSlicerEMSegmentRunSegmentationStep.h"
 
 // EMSegment/MRML includes
-class vtkMRMLROINode;
+class vtkMRMLAnnotationROINode;
 
 //-----------------------------------------------------------------------------
 /// \ingroup Slicer_QtModules_EMSegment
@@ -43,10 +43,10 @@ public:
 
   void setupUi(qSlicerEMSegmentWorkflowWidgetStep *step);
 
-  void setMRMLROINode(vtkMRMLROINode* newROINode);
+  void setMRMLROINode(vtkMRMLAnnotationROINode* newROINode);
 
   // Delete any ROI nodes named "SegmentationROI", and create a new ROI node
-  vtkMRMLROINode* createROINode();
+  vtkMRMLAnnotationROINode* createROINode();
 
   // Propagate changes in ROINode MRML to EMSegmentRunSegmentationStep ROI MRML
   void updateMRMLROINodeUsingInputVolume();
@@ -55,7 +55,7 @@ public:
 
   void updateMRMLFromWidget();
 
-  vtkMRMLROINode* ROINode;
+  vtkMRMLAnnotationROINode* ROINode;
 
 private slots:
 

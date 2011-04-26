@@ -34,7 +34,7 @@
 
 // EMSegment/MRML includes
 #include <vtkEMSegmentMRMLManager.h>
-#include <vtkMRMLEMSNode.h>
+#include <vtkMRMLEMSTemplateNode.h>
 
 //-----------------------------------------------------------------------------
 // qSlicerEMSegmentDefineTaskStepPrivate methods
@@ -70,7 +70,10 @@ void qSlicerEMSegmentDefineTaskStepPrivate::selectTask(vtkMRMLNode* mrmlNode)
 {
   Q_Q(qSlicerEMSegmentDefineTaskStep);
   Q_ASSERT(q->mrmlManager());
-  q->mrmlManager()->SetNode(vtkMRMLEMSNode::SafeDownCast(mrmlNode));
+
+  q->mrmlManager()->SetLoadedParameterSetIndex(vtkMRMLEMSTemplateNode::SafeDownCast(mrmlNode));
+
+  //q->mrmlManager()->SetNodeWithCheck(vtkMRMLEMSTemplateNode::SafeDownCast(mrmlNode));
 }
 
 //-----------------------------------------------------------------------------

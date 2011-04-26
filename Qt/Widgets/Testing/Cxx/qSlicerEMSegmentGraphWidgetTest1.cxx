@@ -22,7 +22,7 @@
 #include <QApplication>
 
 // EMSegment includes
-#include "vtkSlicerEMSegmentLogic.h"
+#include "vtkEMSegmentLogic.h"
 #include "qSlicerEMSegmentGraphWidget.h"
 
 // MRML includes
@@ -42,7 +42,7 @@ int qSlicerEMSegmentGraphWidgetTest1( int argc, char * argv [] )
     return EXIT_SUCCESS;
     }
 
-  vtkSlicerEMSegmentLogic* logic = vtkSlicerEMSegmentLogic::New();
+  vtkEMSegmentLogic* logic = vtkEMSegmentLogic::New();
   vtkMRMLScene* scene =vtkMRMLScene::New();
   logic->SetMRMLScene(scene);
   scene->SetURL(argv[1]);

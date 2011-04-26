@@ -1835,16 +1835,16 @@ SetTreeNodeSpatialPriorVolumeID(vtkIdType nodeID,
     return;
     }
 
-  if (volumeID == -1)
+    if (volumeID == -1)
     {
       if (n->GetSpatialPriorVolumeName())
-    {
-      n->SetSpatialPriorVolumeName(NULL);
-    }
+      {
+          n->SetSpatialPriorVolumeName(NULL);
+      }
       else 
-    {
-      // Did not change anything
-      return;
+      {
+        // Did not change anything
+        return;
     }
     }
   else
@@ -3344,16 +3344,27 @@ SetLoadedParameterSetIndex(int n)
 
   // this always has to be called before calling the function 
   vtkMRMLNode* tNode = this->GetMRMLScene()->GetNthNodeByClass(n, "vtkMRMLEMSTemplateNode");
+
   if (tNode == NULL)
     {
     vtkErrorMacro("Did not find nth template builder node in scene: " << n);
     return 1;
     }
 
+
   vtkMRMLEMSTemplateNode* templateBuilderNode = vtkMRMLEMSTemplateNode::SafeDownCast(tNode);
+  return this->SetLoadedParameterSetIndex(templateBuilderNode);
+}
+
+//----------------------------------------------------------------------------
+int
+vtkEMSegmentMRMLManager::
+SetLoadedParameterSetIndex(vtkMRMLEMSTemplateNode *templateBuilderNode)
+{
+
   if (templateBuilderNode == NULL)
     {
-      vtkErrorMacro("Failed to cast node to template builder node: " << tNode->GetID());
+      vtkErrorMacro("No template node defined"); 
       return 1;
     }
 
@@ -3362,7 +3373,7 @@ SetLoadedParameterSetIndex(int n)
   // Check if all the volume data in the EMSegmenter tree is non-null 
   if (this->CheckEMSTemplateVolumeNodes(templateBuilderNode)) 
     {
-       vtkErrorMacro("EMSegment related volume nodes are corrupted for node: " << tNode->GetID());
+       vtkErrorMacro("EMSegment related volume nodes are corrupted for node: " << templateBuilderNode->GetID());
        return 1;
     }
 
@@ -4102,40 +4113,53 @@ PrintTree(vtkIdType rootID, vtkIndent indent)
   if (rnode == NULL)
     {
     vtkstd::cout << indent << "Node is null for id=" << rootID << std::endl;
+    return;
     }
-  else
-    {
+
+
     vtkstd::cout << indent << "Name: " << (name ? name : "(null)") 
                  << vtkstd::endl;
     vtkstd::cout << indent << "ID: "    << rootID 
                  << " MRML ID: " << rnode->GetID()
                  << " From Map: " << mrmlID << vtkstd::endl;
-    vtkstd::cout << indent << "Is Leaf: " << this->GetTreeNodeIsLeaf(rootID) 
-                 << vtkstd::endl;
-    int numChildren = this->GetTreeNodeNumberOfChildren(rootID); 
-    vtkstd::cout << indent << "Num. Children: " << numChildren << vtkstd::endl;
-    vtkstd::cout << indent << "Child IDs from parent: ";
-    for (int i = 0; i < numChildren; ++i)
-      {
-      vtkstd::cout << rnode->GetNthChildNodeID(i) << " ";
-      }
-    vtkstd::cout << vtkstd::endl;
-    vtkstd::cout << indent << "Child IDs from children: ";
-    for (int i = 0; i < numChildren; ++i)
-      {
-      vtkstd::cout << rnode->GetNthChildNode(i)->GetID() << " ";
-      }
-    vtkstd::cout << vtkstd::endl;
-
-    indent = indent.GetNextIndent();
-    for (int i = 0; i < numChildren; ++i)
-      {
-      vtkIdType childID = this->GetTreeNodeChildNodeID(rootID, i);
-      vtkstd::cout << indent << "Child " << i << " (" << childID 
-                   << ") of node " << rootID << vtkstd::endl;
-      this->PrintTree(childID, indent);
-      }
+    vtkstd::cout << indent << "AlignedSpatialAtlas: "   ;
+    vtkMRMLVolumeNode* alignedSpatial = this->GetAlignedSpatialPriorFromTreeNodeID(rootID);
+    if (alignedSpatial && alignedSpatial->GetName()) {
+      vtkstd::cout <<  alignedSpatial->GetName() << endl;
+    } else {
+      vtkstd::cout << "None" << endl;
     }
+
+    vtkstd::cout << indent << "Is Leaf: " << this->GetTreeNodeIsLeaf(rootID)  << vtkstd::endl;
+   
+    if (!this->GetTreeNodeIsLeaf(rootID) )
+      {  
+      int numChildren = this->GetTreeNodeNumberOfChildren(rootID); 
+  
+      vtkstd::cout << indent << "Num. Children: " << numChildren << vtkstd::endl;
+      vtkstd::cout << indent << "Child IDs from parent: ";
+      for (int i = 0; i < numChildren; ++i)
+        {
+        vtkstd::cout << rnode->GetNthChildNodeID(i) << " ";
+        }
+      vtkstd::cout << vtkstd::endl;
+      vtkstd::cout << indent << "Child IDs from children: ";
+      for (int i = 0; i < numChildren; ++i)
+        {
+        vtkstd::cout << rnode->GetNthChildNode(i)->GetID() << " ";
+        }
+      vtkstd::cout << vtkstd::endl;
+  
+      indent = indent.GetNextIndent();
+      for (int i = 0; i < numChildren; ++i)
+        {
+        vtkIdType childID = this->GetTreeNodeChildNodeID(rootID, i);
+        vtkstd::cout << indent << "Child " << i << " (" << childID 
+                     << ") of node " << rootID << vtkstd::endl;
+        this->PrintTree(childID, indent);
+        }
+      }
+
 }
 
 //-----------------------------------------------------------------------------
@@ -5040,4 +5064,9 @@ void vtkEMSegmentMRMLManager::ImportMRMLFile(const char *mrmlFile,  vtksys_stl::
   cout << "== Completed importing data " << this->MRMLScene->GetURL() << endl;
   cout << "==========================================================================" << endl;
 
+}
+
+void  vtkEMSegmentMRMLManager::SetStorageNodeToNULL(vtkMRMLStorableNode* sNode) 
+{
+    sNode-> SetAndObserveStorageNodeID(NULL);
 }

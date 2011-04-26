@@ -29,6 +29,7 @@ MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 #include "EMLocalInterface.h" 
 #include "vtkMultiThreader.h"
 
+//BTX
 typedef struct {
   float Result;
   int VoxelStart[3];
@@ -250,4 +251,4 @@ private:
 
 };
 #endif
-
+//ETX

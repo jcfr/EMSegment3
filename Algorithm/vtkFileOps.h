@@ -16,7 +16,7 @@
 
 #include "vtkObject.h"
 #include "vtkEMSegment.h"
-    
+//BTX
 class VTK_EMSEGMENT_EXPORT vtkFileOps { //; prevent man page generation
   public:
   static vtkFileOps *New() {return (new vtkFileOps);}
@@ -56,7 +56,7 @@ protected:
   //int uncompressedFileName(const char *fname, char **newFileName);
 };
 
-//BTX
+
 
 template <class T>  
 static T MaxValue(T *vec, int size) {
@@ -123,5 +123,6 @@ static int WriteToGEFile(const char *filename,T *vec, int size) {
   fclose(f);
   return 1;
 }
-//ETX
+
 #endif
+//ETX

@@ -32,6 +32,7 @@
 #include "vtkMRMLEMSTreeNode.h"
 #include "vtkMRMLEMSWorkingDataNode.h"
 #include "vtkMRMLEMSTargetNode.h"
+#include <vtkMRMLEMSGlobalParametersNode.h>
 #include "vtkPlotGaussian.h"
 
 // MRML includes
@@ -134,10 +135,13 @@ void qSlicerEMSegmentGraphWidgetPrivate::addClass(vtkIdType classID)
   // name
   checkBox->setText(classNode->GetName());
   // color
+  //vtkMRMLColorTableNode* colorTableNode = vtkMRMLColorTableNode::SafeDownCast(
+  //  q->mrmlScene()->GetNodeByID( q->mrmlManager()->GetColormap()?
+  //                               q->mrmlManager()->GetColormap():
+  //                               "vtkMRMLColorTableNodeLabels"));
   vtkMRMLColorTableNode* colorTableNode = vtkMRMLColorTableNode::SafeDownCast(
-    q->mrmlScene()->GetNodeByID( q->mrmlManager()->GetColormap()?
-                                 q->mrmlManager()->GetColormap():
-                                 "vtkMRMLColorTableNodeLabels"));
+      q->mrmlScene()->GetNodeByID(q->mrmlManager()->GetColorNodeID()));
+
   vtkLookupTable* lut = colorTableNode ? colorTableNode->GetLookupTable() : 0;
   double rgba[4] = {0., 0., 0., 1.};
   if (lut)
@@ -187,8 +191,8 @@ void qSlicerEMSegmentGraphWidgetPrivate::updateClass(vtkIdType classID, int inpu
   Q_Q(qSlicerEMSegmentGraphWidget);
   vtkPlotGaussian* plot = this->ClassPlotList[input][classID];
   int index = this->volumeIndex(this->volumeID(input));
-  plot->SetMean(q->mrmlManager()->GetTreeNodeDistributionLogMean(classID, index));
-  plot->SetCovariance(q->mrmlManager()->GetTreeNodeDistributionLogCovariance(classID, index, index));
+  plot->SetMean(q->mrmlManager()->GetTreeNodeDistributionLogMeanWithCorrection(classID, index));
+  plot->SetCovariance(q->mrmlManager()->GetTreeNodeDistributionLogCovarianceWithCorrection(classID, index, index));
   plot->SetProbability(q->mrmlManager()->GetTreeNodeClassProbability(classID));
   plot->SetLog(true);
   plot->GetScene()->SetDirty(true);
@@ -252,8 +256,9 @@ void qSlicerEMSegmentGraphWidget::updateFromMRMLManager()
   vtkEMSegmentMRMLManager* manager = this->mrmlManager();
   vtkMRMLEMSWorkingDataNode* workingDataNode = manager->GetWorkingDataNode();
   Q_ASSERT_X(workingDataNode, __FUNCTION__, "Can't find a valid vtkMRMLEMSWorkingDataNode");
-  vtkMRMLEMSTargetNode* input = workingDataNode->GetInputTargetNode();
-  vtkMRMLEMSTargetNode* aligned = workingDataNode->GetAlignedTargetNode();
+  vtkMRMLEMSVolumeCollectionNode* input = workingDataNode->GetInputTargetNode();
+  vtkMRMLEMSVolumeCollectionNode* aligned = workingDataNode->GetAlignedTargetNode();
+  vtkMRMLEMSGlobalParametersNode* globalNode = manager->GetGlobalParametersNode();
   if (!aligned)
     {// TBD: currently not set up correctly so we simply use input
     aligned = input;
@@ -264,7 +269,7 @@ void qSlicerEMSegmentGraphWidget::updateFromMRMLManager()
   for (int i = 0; i < volumeCount; ++i)
     {
     QString volumeID = aligned->GetNthVolumeNodeID(i);
-    d->VolumeList[volumeID] = input->GetNthInputChannelName(i);
+    d->VolumeList[volumeID] = globalNode->GetNthTargetInputChannelName(i);
     if (d->VolumeList[volumeID].isEmpty())
       {
       vtkMRMLVolumeNode* volume = vtkMRMLVolumeNode::SafeDownCast(
@@ -307,7 +312,7 @@ void qSlicerEMSegmentGraphWidget::onCurrentInput0VolumeChanged(const QString& vo
     d->updateClass(classID, 0);
     }
 
-  d->Chart0->SetTitle(volumeName.toLatin1());
+  d->Chart0->SetTitle(vtkStdString(volumeName.toLatin1()));
   d->Chart0->RecalculateBounds();
   d->Chart0View->Render();
 }
@@ -327,7 +332,7 @@ void qSlicerEMSegmentGraphWidget::onCurrentInput1VolumeChanged(const QString& vo
     {
     d->updateClass(classID, 1);
     }
-  d->Chart1->SetTitle(volumeName.toLatin1());
+  d->Chart1->SetTitle(vtkStdString(volumeName.toLatin1()));
   d->Chart1->RecalculateBounds();
   d->Chart1View->Render();
 }

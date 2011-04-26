@@ -1,13 +1,6 @@
-SET(Slicer_CMAKE_DIR "${Slicer_SOURCE_DIR}/CMake" CACHE INTERNAL "")
-
-INCLUDE(${Slicer_CMAKE_DIR}/SlicerMacroParseArguments.cmake)
-INCLUDE(${Slicer_CMAKE_DIR}/SlicerMacroBuildModuleLogic.cmake)
-INCLUDE(${Slicer_CMAKE_DIR}/SlicerMacroBuildQtModule.cmake)
-
 
 # --------------------------------------------------------------------------
 # Add subdirectories
-
 ADD_SUBDIRECTORY(Logic)
 
 
@@ -18,14 +11,14 @@ SET(qt_module_export_directive "Q_SLICER_QTMODULES_EMSEGMENT_EXPORT")
 
 # Additional includes - Current_{source,binary} and Slicer_{Libs,Base} already included
 SET(qt_module_include_directories
-  ${EMSegmentMRML_SOURCE_DIR}
-  ${EMSegmentMRML_BINARY_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/Logic
   ${CMAKE_CURRENT_BINARY_DIR}/Logic
   ${CMAKE_CURRENT_SOURCE_DIR}/Widgets
   ${CMAKE_CURRENT_BINARY_DIR}/Widgets
   ${CMAKE_CURRENT_SOURCE_DIR}/Workflow
   ${CMAKE_CURRENT_BINARY_FIR}/Workflow
+  ${Slicer_SOURCE_DIR}/QTModules/Annotation/MRML
+  ${Slicer_BINARY_DIR}/QTModules/Annotation  
   )
 
 # Widget source files
@@ -145,6 +138,7 @@ SET(qt_module_UI_SRCS
 SET(qt_module_target_libraries
   vtkSlicerEMSegmentModuleLogic
   vtkCharts
+  qSlicerAnnotationModule
   )
 
 # Resources

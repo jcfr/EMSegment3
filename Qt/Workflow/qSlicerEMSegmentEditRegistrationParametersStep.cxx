@@ -37,6 +37,7 @@
 #include <vtkEMSegmentMRMLManager.h>
 #include <vtkMRMLEMSTargetNode.h>
 #include <vtkMRMLEMSAtlasNode.h>
+#include <vtkMRMLEMSGlobalParametersNode.h>
 
 // MRML includes
 #include <vtkMRMLScene.h>
@@ -68,40 +69,40 @@ void qSlicerEMSegmentEditRegistrationParametersStepPrivate::setupUi(
 
   // Affine registration comboBox
   this->AffineRegistrationComboBox->addItem(
-      step->tr("None"), vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationOff);
+      step->tr("None"), vtkEMSegmentMRMLManager::RegistrationOff);
+  //this->AffineRegistrationComboBox->addItem(
+  //    step->tr("Align Image Centers"), vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationCenters);
   this->AffineRegistrationComboBox->addItem(
-      step->tr("Align Image Centers"), vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationCenters);
+      step->tr("Fast"), vtkEMSegmentMRMLManager::RegistrationFast);
+  //this->AffineRegistrationComboBox->addItem(
+  //    step->tr("Rigid, MI"), vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidMMI);
   this->AffineRegistrationComboBox->addItem(
-      step->tr("Fast"), vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidMMIFast);
-  this->AffineRegistrationComboBox->addItem(
-      step->tr("Rigid, MI"), vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidMMI);
-  this->AffineRegistrationComboBox->addItem(
-      step->tr("Slow"), vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidMMISlow);
-  this->AffineRegistrationComboBox->addItem(
-      step->tr("Rigid, NCC Fast"), vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidNCCFast);
-  this->AffineRegistrationComboBox->addItem(
-      step->tr("Rigid, NCC"), vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidNCC);
-  this->AffineRegistrationComboBox->addItem(
-      step->tr("Rigid, NCC Slow"), vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidNCCSlow);
+      step->tr("Slow"), vtkEMSegmentMRMLManager::RegistrationSlow);
+  //this->AffineRegistrationComboBox->addItem(
+  //    step->tr("Rigid, NCC Fast"), vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidNCCFast);
+  //this->AffineRegistrationComboBox->addItem(
+  //    step->tr("Rigid, NCC"), vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidNCC);
+  //this->AffineRegistrationComboBox->addItem(
+  //    step->tr("Rigid, NCC Slow"), vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidNCCSlow);
 
   // Deformable registration comboBox
   this->DeformableRegistrationComboBox->addItem(
-      step->tr("None"), vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationOff);
+      step->tr("None"), vtkEMSegmentMRMLManager::RegistrationOff);
   this->DeformableRegistrationComboBox->addItem(
-      step->tr("Fast"), vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineMMIFast);
+      step->tr("Fast"), vtkEMSegmentMRMLManager::RegistrationFast);
+  //this->DeformableRegistrationComboBox->addItem(
+  //    step->tr("B-Spline, MI"), vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineMMI);
   this->DeformableRegistrationComboBox->addItem(
-      step->tr("B-Spline, MI"), vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineMMI);
-  this->DeformableRegistrationComboBox->addItem(
-      step->tr("Slow"), vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineMMISlow);
-  this->DeformableRegistrationComboBox->addItem(
-      step->tr("B-Spline, NCC Fast"),
-      vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineNCCFast);
-  this->DeformableRegistrationComboBox->addItem(
-      step->tr("B-Spline, NCC"),
-      vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineNCC);
-  this->DeformableRegistrationComboBox->addItem(
-      step->tr("B-Spline, NCC Slow"),
-      vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineNCCSlow);
+      step->tr("Slow"), vtkEMSegmentMRMLManager::RegistrationSlow);
+  //this->DeformableRegistrationComboBox->addItem(
+  //    step->tr("B-Spline, NCC Fast"),
+  //    vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineNCCFast);
+  //this->DeformableRegistrationComboBox->addItem(
+  //    step->tr("B-Spline, NCC"),
+  //    vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineNCC);
+  //this->DeformableRegistrationComboBox->addItem(
+  //    step->tr("B-Spline, NCC Slow"),
+  //    vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineNCCSlow);
 
   // Interpolation comboBox
   this->InterpolationComboBox->addItem(
@@ -127,13 +128,15 @@ void qSlicerEMSegmentEditRegistrationParametersStepPrivate::updateAtlasScansToIn
   Q_Q(qSlicerEMSegmentEditRegistrationParametersStep);
   Q_ASSERT(q->mrmlManager());
 
-  vtkMRMLEMSTargetNode *inputNodes = q->mrmlManager()->GetTargetInputNode();
+  vtkMRMLEMSVolumeCollectionNode *inputNodes = q->mrmlManager()->GetTargetInputNode();
+  vtkMRMLEMSGlobalParametersNode* globalNode = q->mrmlManager()->GetGlobalParametersNode();
+  Q_ASSERT(globalNode);
   Q_ASSERT(inputNodes);
 
   // Loop over inputChannels
   for(int inputVolumeId = 0; inputVolumeId < inputNodes->GetNumberOfVolumes(); inputVolumeId++)
     {
-    QString inputChannelName = QLatin1String(inputNodes->GetNthInputChannelName(inputVolumeId));
+    QString inputChannelName = QLatin1String(globalNode->GetNthTargetInputChannelName(inputVolumeId));
     logger.debug(QString("updateAtlasScansToInputChannelsLayoutFromMRML - inputChannelName: %1").
                  arg(inputChannelName));
     vtkMRMLVolumeNode * volumeNode = inputNodes->GetNthVolumeNode(inputVolumeId);
@@ -300,14 +303,14 @@ void qSlicerEMSegmentEditRegistrationParametersStepPrivate::
   Q_ASSERT(q->mrmlManager());
 
   int type = this->AffineRegistrationComboBox->itemData(index).toInt();
-  Q_ASSERT(type == vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationOff ||
-           type == vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationCenters ||
-           type == vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidMMI ||
-           type == vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidNCC ||
-           type == vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidMMIFast ||
-           type == vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidNCCFast ||
-           type == vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidMMISlow ||
-           type == vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidNCCSlow);
+  Q_ASSERT(type == vtkEMSegmentMRMLManager::RegistrationOff ||
+           //type == vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationCenters ||
+           //type == vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidMMI ||
+           //type == vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidNCC ||
+           type == vtkEMSegmentMRMLManager::RegistrationFast ||
+           //type == vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidNCCFast ||
+           type == vtkEMSegmentMRMLManager::RegistrationSlow);
+           //type == vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidNCCSlow);
   logger.debug(QString("onCurrentAffineRegistrationIndexChanged - type: %1").
                arg(type));
   q->mrmlManager()->SetRegistrationAffineType(type);
@@ -321,13 +324,13 @@ void qSlicerEMSegmentEditRegistrationParametersStepPrivate::
   Q_ASSERT(q->mrmlManager());
 
   int type = this->DeformableRegistrationComboBox->itemData(index).toInt();
-  Q_ASSERT(type == vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationOff ||
-           type == vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineMMI ||
-           type == vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineNCC ||
-           type == vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineMMIFast ||
-           type == vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineNCCFast ||
-           type == vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineMMISlow ||
-           type == vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineNCCSlow);
+  Q_ASSERT(type == vtkEMSegmentMRMLManager::RegistrationOff ||
+           //type == vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineMMI ||
+           //type == vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineNCC ||
+           type == vtkEMSegmentMRMLManager::RegistrationFast ||
+           //type == vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineNCCFast ||
+           //type == vtkEMSegmentMRMLManager::AtlasToTargetDeformableRegistrationBSplineMMISlow ||
+           type == vtkEMSegmentMRMLManager::RegistrationSlow);
   logger.debug(QString("onCurrentDeformableRegistrationIndexChanged - type: %1").
                arg(type));
   q->mrmlManager()->SetRegistrationDeformableType(type);

@@ -39,7 +39,7 @@
 #include "vtkKWMessageDialog.h"
 #include "vtkEMSegmentKWLogic.h"
 #include "vtkMRMLEMSGlobalParametersNode.h"
-
+#include "vtkMRMLEMSTemplateNode.h"
 
 #include "vtkDirectory.h"
 #include "vtkHTTPHandler.h"
@@ -432,7 +432,7 @@ void vtkEMSegmentParametersSetStep::SelectedParameterSetChangedCallback(int inde
     }
 
 
-   vtkMRMLNode* node = mrmlManager->GetMRMLScene()->GetNthNodeByClass(index, "vtkMRMLEMSTemplateNode");
+  vtkMRMLEMSTemplateNode* node = vtkMRMLEMSTemplateNode::SafeDownCast(mrmlManager->GetMRMLScene()->GetNthNodeByClass(index, "vtkMRMLEMSTemplateNode"));
   if (node == NULL)
     {
     vtkErrorMacro("Did not find nth template builder node in scene: " << index);
@@ -440,7 +440,7 @@ void vtkEMSegmentParametersSetStep::SelectedParameterSetChangedCallback(int inde
     }
 
    // Set the template node in the mrml manager 
-  if (mrmlManager->SetLoadedParameterSetIndex(index))  
+  if (mrmlManager->SetLoadedParameterSetIndex(node))  
     {
       vtkErrorMacro("EMS node is corrupted - the manager could not be updated with new task: " << index);
       return; 
@@ -696,7 +696,7 @@ int vtkEMSegmentParametersSetStep::LoadDefaultTask(int index, bool warningFlag)
     const char *name = mrmlManager->GetNthParameterSetName(i);
     if (name && !strcmp(name,pssDefaultTasksName[index].c_str()))
       {
-      // Select the Node
+      // Select the Node-
       this->SelectedParameterSetChangedCallback(i,0);
       break;
       }

@@ -126,7 +126,7 @@ void qSlicerEMSegmentDefineInputChannelsStep::validate(const QString& desiredBra
   Q_D(qSlicerEMSegmentDefineInputChannelsStep);
 
   Q_ASSERT(this->mrmlManager());
-  Q_ASSERT(this->mrmlManager()->GetTargetInputNode());
+  //Q_ASSERT(this->mrmlManager()->GetTargetInputNode());
 
   int requiredInputChannelCount = 1;
 
@@ -141,7 +141,7 @@ void qSlicerEMSegmentDefineInputChannelsStep::validate(const QString& desiredBra
   int inputChannelCount = d->EMSegmentInputChannelListWidget->inputChannelCount();
 
   // Check if number of input channels changed ...
-  if (inputChannelCount != this->mrmlManager()->GetTargetInputNode()->GetNumberOfVolumes())
+  if (inputChannelCount != this->mrmlManager()->GetTargetNumberOfSelectedVolumes())
     {
     if (QMessageBox::No == QMessageBox::question(this, "EMSegmenter", tr("Are you sure you want to change the number of input images?"),
         QMessageBox::Yes, QMessageBox::No))

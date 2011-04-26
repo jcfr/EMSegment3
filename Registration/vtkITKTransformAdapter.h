@@ -6,6 +6,9 @@
 #include "vtkWarpTransform.h"
 #include "itkTransform.h"
 
+
+//BTX
+
 //
 // Helper class for converting from itk transforms to vtk transforms.
 // This class is not comprehensive or ready for general use.
@@ -77,5 +80,5 @@ private:
   
   TransformType* ITKTransform;
 };
-
+//ETX
 #endif // __vtkITKTransformAdapter_h

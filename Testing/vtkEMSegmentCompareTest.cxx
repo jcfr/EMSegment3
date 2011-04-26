@@ -1,7 +1,6 @@
 #include <vector>
 #include <string>
 #include "vtkMRMLScene.h"
-#include "vtkEMSegmentKWLogic.h"
 #include "vtkEMSegmentTestUtilities.h"
 #include "vtkITKArchetypeImageSeriesReader.h"
 #include "vtkITKArchetypeImageSeriesScalarReader.h"
@@ -17,7 +16,7 @@ int main(int argc, char** argv)
   // parse command line
   if (argc < 2)
   {
-    std::cerr 
+    std::cerr
       << "Usage: vtkEMSegmentBlackBoxSegmentationTest"     << std::endl
       <<         "<resultImageTestFilename>"               << std::endl
       <<         "<resultImageOrigFilename>"               << std::endl

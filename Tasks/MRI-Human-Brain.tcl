@@ -73,7 +73,6 @@ namespace eval EMSegmenterPreProcessingTcl {
         variable preGUI
         variable workingDN
         variable alignedTargetNode
-        variable inputAtlasNode
         variable mrmlManager
         variable LOGIC
 

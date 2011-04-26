@@ -25,7 +25,7 @@
 #include <qSlicerCoreApplication.h>
 
 // EMSegment Logic includes
-#include <vtkSlicerEMSegmentLogic.h>
+#include <vtkEMSegmentLogic.h>
 
 // EMSegment QTModule includes
 #include "qSlicerEMSegmentModule.h"
@@ -86,7 +86,7 @@ qSlicerAbstractModuleRepresentation * qSlicerEMSegmentModule::createWidgetRepres
 //-----------------------------------------------------------------------------
 vtkMRMLAbstractLogic* qSlicerEMSegmentModule::createLogic()
 {
-  return vtkSlicerEMSegmentLogic::New();
+  return vtkEMSegmentLogic::New();
 }
 
 //-----------------------------------------------------------------------------

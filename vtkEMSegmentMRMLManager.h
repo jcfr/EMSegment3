@@ -16,6 +16,8 @@ class vtkMRMLEMSWorkingDataNode;
 class vtkMRMLScalarVolumeNode;
 class vtkMRMLVolumeNode;
 class vtkMRMLEMSVolumeCollectionNode;
+class vtkMRMLStorableNode;
+
 // need enum values
 #include "vtkMRMLEMSTreeParametersLeafNode.h"
 
@@ -63,7 +65,8 @@ public:
   // populates the nodes with default values, adds the nodes to the
   // MRML scene.
   virtual void        CreateAndObserveNewParameterSet();
-  virtual int         SetLoadedParameterSetIndex(int i);
+  int         SetLoadedParameterSetIndex(int i);
+  int         SetLoadedParameterSetIndex(vtkMRMLEMSTemplateNode* tNode);
   virtual int         CheckEMSTemplateVolumeNodes(vtkMRMLEMSTemplateNode* emsTemplateNode);
 
   //
@@ -508,6 +511,10 @@ public:
   virtual void CopyEMRelatedNodesToMRMLScene(vtkMRMLScene* newScene);
 
   virtual  void RemoveLegacyNodes();
+ 
+  // Needed for Tcl  - if you set it as "" then it is interpreted as an id 
+  void SetStorageNodeToNULL(vtkMRMLStorableNode* sNode) ;
+
 //BTX
   void ImportMRMLFile(const char *mrmlFile,  vtksys_stl::string errMSG);  
 //ETX

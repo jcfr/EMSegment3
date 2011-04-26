@@ -31,7 +31,7 @@
 #include "qSlicerEMSegmentWorkflowWidget.h"
 
 // EMSegment/Logic includes
-#include <vtkSlicerEMSegmentLogic.h>
+#include <vtkEMSegmentLogic.h>
 
 // EMSegment/MRML includes
 #include <vtkEMSegmentMRMLManager.h>
@@ -44,7 +44,7 @@ public:
   qSlicerEMSegmentWorkflowWidgetStepPrivate();
 
   vtkEMSegmentMRMLManager *        MRMLManager;
-  vtkSlicerEMSegmentLogic *        EMSegmentLogic;
+  vtkEMSegmentLogic *        EMSegmentLogic;
 };
 
 //-----------------------------------------------------------------------------
@@ -82,8 +82,8 @@ qSlicerEMSegmentWorkflowWidgetStep::~qSlicerEMSegmentWorkflowWidgetStep()
 
 //-----------------------------------------------------------------------------
 CTK_GET_CPP(qSlicerEMSegmentWorkflowWidgetStep, vtkEMSegmentMRMLManager*, mrmlManager, MRMLManager);
-CTK_GET_CPP(qSlicerEMSegmentWorkflowWidgetStep, vtkSlicerEMSegmentLogic*, emSegmentLogic, EMSegmentLogic);
-CTK_SET_CPP(qSlicerEMSegmentWorkflowWidgetStep, vtkSlicerEMSegmentLogic*, setEMSegmentLogic, EMSegmentLogic);
+CTK_GET_CPP(qSlicerEMSegmentWorkflowWidgetStep, vtkEMSegmentLogic*, emSegmentLogic, EMSegmentLogic);
+CTK_SET_CPP(qSlicerEMSegmentWorkflowWidgetStep, vtkEMSegmentLogic*, setEMSegmentLogic, EMSegmentLogic);
 
 //-----------------------------------------------------------------------------
 vtkMRMLScene * qSlicerEMSegmentWorkflowWidgetStep::mrmlScene()const

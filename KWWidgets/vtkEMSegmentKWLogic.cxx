@@ -9,7 +9,6 @@
 #include "vtkKWTkUtilities.h"
 #include "vtkDataIOManagerLogic.h"
 #include "../../Applications/GUI/Slicer3Helper.cxx"
-#include "vtkImageIslandFilter.h"
 
 
 //----------------------------------------------------------------------------
@@ -131,177 +130,12 @@ int vtkEMSegmentKWLogic::SourcePreprocessingTclFiles()
 //----------------------------------------------------------------------------
 int vtkEMSegmentKWLogic::StartSegmentationWithoutPreprocessing(vtkSlicerApplicationLogic *appLogic)
 {
-  //
-  // make sure we're ready to start
-  //
-  ErrorMsg.clear();
-
-  if (!this->EMSLogic->GetMRMLManager()->GetWorkingDataNode()->GetAlignedTargetNodeIsValid() ||
-      !this->EMSLogic->GetMRMLManager()->GetWorkingDataNode()->GetAlignedAtlasNodeIsValid())
+  int flag = this->EMSLogic->StartSegmentationWithoutPreprocessingAndSaving() ;
+  ErrorMsg = this->EMSLogic->GetErrorMessage();
+  if (flag == EXIT_FAILURE)
     {
-    ErrorMsg = "Preprocessing pipeline not up to date!  Aborting Segmentation.";
-    vtkErrorMacro( << ErrorMsg );
-    return EXIT_FAILURE;
+         return EXIT_FAILURE;
     }
-
-
-  // find output volume
-  if (!this->EMSLogic->GetMRMLManager()->GetNode())
-    {
-    ErrorMsg     = "Template node is null---aborting segmentation.";
-    vtkErrorMacro( << ErrorMsg );
-    return EXIT_FAILURE;
-    }
-  vtkMRMLScalarVolumeNode *outVolume = this->EMSLogic->GetMRMLManager()->GetOutputVolumeNode();
-  if (outVolume == NULL)
-    {
-    ErrorMsg     = "No output volume found---aborting segmentation.";
-    vtkErrorMacro( << ErrorMsg );
-    return EXIT_FAILURE;
-    }
-
-  //
-  // Copy RASToIJK matrix, and other attributes from input to
-  // output. Use first target volume as source for this data.
-  //
-  
-  // get attributes from first target input volume
-  const char* inMRLMID = 
-    this->EMSLogic->GetMRMLManager()->GetTargetInputNode()->GetNthVolumeNodeID(0);
-  vtkMRMLScalarVolumeNode *inVolume = vtkMRMLScalarVolumeNode::
-    SafeDownCast(this->EMSLogic->GetMRMLScene()->GetNodeByID(inMRLMID));
-  if (inVolume == NULL)
-    {
-    ErrorMsg     = "Can't get first target image.";
-    vtkErrorMacro( << ErrorMsg); 
-    return EXIT_FAILURE;
-    }
-
-  outVolume->CopyOrientation(inVolume);
-  outVolume->SetAndObserveTransformNodeID(inVolume->GetTransformNodeID());
-
-  //
-  // create segmenter class
-  //
-  vtkImageEMLocalSegmenter* segmenter = vtkImageEMLocalSegmenter::New();
-  if (segmenter == NULL)
-    {
-    ErrorMsg = "Could not create vtkImageEMLocalSegmenter pointer";
-    vtkErrorMacro( << ErrorMsg );
-    return EXIT_FAILURE;
-    }
-
-  //
-  // copy mrml data to segmenter class
-  //
-  vtkstd::cout << "EMSEG: Copying data to algorithm class...";
-  this->EMSLogic->CopyDataToSegmenter(segmenter);
-  vtkstd::cout << "DONE" << vtkstd::endl;
-
-  if (this->GetDebug())
-  {
-    vtkstd::cout << "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" << vtkstd::endl;
-    vtkstd::cout << "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" << vtkstd::endl;
-    vtkstd::cout << "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" << vtkstd::endl;
-    vtkIndent indent;
-    segmenter->PrintSelf(vtkstd::cout, indent);
-    vtkstd::cout << "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" << vtkstd::endl;
-    vtkstd::cout << "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" << vtkstd::endl;
-    vtkstd::cout << "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" << vtkstd::endl;
-  }
-
-  //
-  // start segmentation
-  //
-  try 
-    {
-    vtkstd::cout << "[Start] Segmentation algorithm..." << vtkstd::endl;
-    segmenter->Update();
-    vtkstd::cout << "[Done]  Segmentation algorithm." << vtkstd::endl;
-    }
-  catch (std::exception& e)
-    {
-    ErrorMsg = "Exception thrown during segmentation: "  + std::string(e.what()) + "\n";
-    vtkErrorMacro( << ErrorMsg );
-    return EXIT_FAILURE;
-    } 
-
-  if (this->GetDebug())
-  {
-    vtkstd::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << vtkstd::endl;
-    vtkstd::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << vtkstd::endl;
-    vtkstd::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << vtkstd::endl;
-    segmenter->PrintSelf(vtkstd::cout, static_cast<vtkIndent>(0));
-    vtkstd::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << vtkstd::endl;
-    vtkstd::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << vtkstd::endl;
-    vtkstd::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << vtkstd::endl;
-  }
-
-  // POST PROCESSING 
-  vtkstd::cout << "[Start] Postprocessing ..." << vtkstd::endl;
-  vtkImageData* postProcessing = vtkImageData::New(); 
-  postProcessing->ShallowCopy(segmenter->GetOutput());
-
-  // Subparcellation
-  if (this->EMSLogic->GetMRMLManager()->GetEnableSubParcellation()) {
-    vtkstd::cout << "=== Sub-Parcellation === " << vtkstd::endl;
-    this->EMSLogic->SubParcelateSegmentation(postProcessing,this->EMSLogic->GetMRMLManager()->GetTreeRootNodeID()); 
-  }
-
-  // Island Removal
-  if (this->EMSLogic->GetMRMLManager()->GetMinimumIslandSize() > 1) {
-     vtkstd::cout << "=== Island removal === " << vtkstd::endl;
-     vtkImageData* input = vtkImageData::New();
-     input->DeepCopy(postProcessing);
-     vtkImageIslandFilter* islandFilter = vtkImageIslandFilter::New();
-     islandFilter->SetInput(input);
-     islandFilter->SetIslandMinSize(this->EMSLogic->GetMRMLManager()->GetMinimumIslandSize());
-     islandFilter->SetNeighborhoodDim3D();
-     islandFilter->SetPrintInformation(1);
-     islandFilter->Update();
-     postProcessing->DeepCopy(islandFilter->GetOutput());
-     islandFilter->Delete();
-     input->Delete();
-  }
-  vtkstd::cout << "[Done] Postprocessing" << vtkstd::endl;
-  //
-  // copy result to output volume
-  //
-  
-  // set output of the filter to VolumeNode's ImageData
-
-  outVolume->SetAndObserveImageData(postProcessing);
-  postProcessing->Delete();
-  // make sure the output volume is a labelmap
-  
-  if (!outVolume->GetLabelMap())
-  {
-    vtkWarningMacro("Changing output image to labelmap");
-    outVolume->LabelMapOn();
-  }
-
-  // vtkstd::cout << "=== Define Display Node  === " << vtkstd::endl;
-
-  vtkMRMLVolumeDisplayNode *outDisplayNode = vtkMRMLVolumeDisplayNode::SafeDownCast(outVolume->GetDisplayNode());
-  if (!outDisplayNode) 
-    {
-       vtkWarningMacro("Did not define lookup table bc display node is not defined ");
-    } 
-  else 
-    {
-      const char* colorID = this->EMSLogic->GetMRMLManager()->GetColorNodeID();
-      if (colorID &&   strcmp(outDisplayNode->GetColorNodeID(),  colorID) != 0)
-       {
-             outDisplayNode->SetAndObserveColorNodeID(colorID);
-       }
-    }
-  
-  // vtkstd::cout << "=== Cleanup  === " << vtkstd::endl;
-  outVolume->SetModifiedSinceRead(1);
-  //
-  // clean up
-  //
-  segmenter->Delete();
 
   //
   // save intermediate results

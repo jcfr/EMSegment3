@@ -3,7 +3,10 @@
 #include "vtkObjectFactory.h"
 #include "vtkImageData.h"
 
-//------------------------------------------------------------------------
+
+/**
+ *
+ */
 vtkCTHandBoneClass* vtkCTHandBoneClass::New()
 {
   // First try to create the object from the vtkObjectFactory
@@ -18,205 +21,91 @@ vtkCTHandBoneClass* vtkCTHandBoneClass::New()
 }
 
 
-//----------------------------------------------------------------------------
+/**
+ *
+ */
 vtkCTHandBoneClass::vtkCTHandBoneClass() {
+  // in use?
 }
 
-void vtkCTHandBoneClass::xxx() {
-  std::cout << "xxx" << std::endl;
-}
 
-int vtkCTHandBoneClass::blur(const char* inputImage, const char* outputImage, const char* gaussianVariance, const char* maxKernelWidth)
+/**
+ *
+ */
+int vtkCTHandBoneClass::flip(
+                             const char* inputFile,
+                             const char* outputFlippedImageFile,
+                             const char* flipAxisX,
+                             const char* flipAxisY,
+                             const char* flipAxisZ)
 {
-  std::cerr << "Blur Image: " << std::endl;
+  typedef itk::Image<signed short,3> ImageType;
 
-  // Setup pixel type and input image type
-  typedef itk::Image< signed short,  3 >   ImageType;
-  //To save as an 8bit image
-  typedef itk::Image< unsigned char,  3 >   OutputImageType;
-
-  //Read in Image File
-  typedef itk::ImageFileReader<ImageType> ReaderType;
-  ReaderType::Pointer reader = ReaderType::New();
-  reader->SetFileName( inputImage );
-  reader->Update();
-
-  typedef  signed short  PixelType;
-
-  typedef itk::RescaleIntensityImageFilter<ImageType, ImageType> RescaleFilterType;
-  RescaleFilterType::Pointer rescaler = RescaleFilterType::New();
-  rescaler->SetOutputMinimum(0);
-  rescaler->SetOutputMaximum(255);
-  rescaler->SetInput(reader->GetOutput());
-  rescaler->Update();
-
-  typedef itk::DiscreteGaussianImageFilter<ImageType,ImageType> FilterType;
-  FilterType::Pointer filter = FilterType::New();
-  filter->SetInput(rescaler->GetOutput());
-  filter->SetVariance( atoi(gaussianVariance) );
-  filter->SetMaximumKernelWidth( atoi(maxKernelWidth) );
-  filter->Update();
-
-  typedef itk::RescaleIntensityImageFilter<ImageType, OutputImageType> RescaleFilterType2;
-  RescaleFilterType2::Pointer rescaler2 = RescaleFilterType2::New();
-  rescaler2->SetOutputMinimum(0);
-  rescaler2->SetOutputMaximum(255);
-  rescaler2->SetInput(filter->GetOutput());
-  rescaler2->Update();
-
-  //Write blurred file out
-  typedef itk::ImageFileWriter< OutputImageType >  WriterType;
-  WriterType::Pointer writer = WriterType::New();
-  writer->SetFileName( outputImage );
-  writer->SetInput(rescaler2->GetOutput());
-  writer->Update();
-
-  return EXIT_SUCCESS;
-
-}
-
-
-
-
-int vtkCTHandBoneClass::binary_threshold(const char* inputDirectory, const char* outputThresholdImage, const char* _lowerThreshold, const char* _upperThreshold)
-{
-  std::cerr << "Binary Threshold Image: " << std::endl;
-
-  // Setup pixel type and input image type
-  typedef itk::Image< signed short,  3 >   ImageType;
-
-  ////Read in dicom series
-  //itk::GDCMSeriesFileNames::Pointer FileNameGenerator = itk::GDCMSeriesFileNames::New();
-  //FileNameGenerator->SetUseSeriesDetails(false);
-  //FileNameGenerator->SetDirectory( inputDirectory );
-
-  //std::vector<std::string> seriesUIDs = FileNameGenerator->GetSeriesUIDs();
-
-  //typedef itk::ImageSeriesReader< ImageType > ImageSeriesReaderType;
-  //ImageSeriesReaderType::Pointer imageSeriesReader = ImageSeriesReaderType::New();
-  //itk::GDCMImageIO::Pointer dicomIO = itk::GDCMImageIO::New();
-
-  //imageSeriesReader->SetFileNames( FileNameGenerator->GetFileNames( seriesUIDs[0] ) );
-  //imageSeriesReader->SetImageIO( dicomIO );
-  //imageSeriesReader->Update();
-
-  typedef itk::ImageFileReader<ImageType> InputImageType;
-  InputImageType::Pointer input = InputImageType::New();
-  input->SetFileName( inputDirectory );
-  input->Update();
-
-  // TODO signed vs unsigned
-  typedef  signed short  InputPixelType;
-  const InputPixelType lowerThreshold = atoi( _lowerThreshold );
-  const InputPixelType upperThreshold = atoi( _upperThreshold );
-
-  typedef itk::BinaryThresholdImageFilter<ImageType,ImageType> FilterType;
-  FilterType::Pointer filter = FilterType::New();
-  filter->SetInput(input->GetOutput());
-  filter->SetOutsideValue(255);
-  filter->SetInsideValue(0);
-  filter->SetLowerThreshold(lowerThreshold);
-  filter->SetUpperThreshold(upperThreshold);
-  filter->Update();
-
-  typedef itk::RescaleIntensityImageFilter<ImageType, ImageType> RescaleFilterType;
-  RescaleFilterType::Pointer rescaler = RescaleFilterType::New();
-  rescaler->SetOutputMinimum(0);
-  rescaler->SetOutputMaximum(255);
-  rescaler->SetInput(filter->GetOutput());
-
-  ImageType::Pointer DicomImage = ImageType::New();
-  DicomImage = rescaler->GetOutput();
-
-  //Write flipped file out
-  typedef itk::ImageFileWriter< ImageType >  WriterType;
-  WriterType::Pointer writer = WriterType::New();
-  writer->SetFileName( outputThresholdImage );
-  writer->SetInput(DicomImage);
-  writer->Update();
-
-  return EXIT_SUCCESS;
-}
-
-
-
-
-int vtkCTHandBoneClass::flip( const char* inputFile, const char* outputFlippedImageFile, const char* flipAxisX, const char* flipAxisY, const char* flipAxisZ )
-{
-  std::cerr << "Flip Image: " << std::endl;
-
-  // Setup pixel type and input image type
-  typedef itk::Image< signed short,  3 >   ImageType;
-
+  //Setup itk::ImageFileReader
   typedef itk::ImageFileReader<ImageType> ReaderType;
   ReaderType::Pointer reader = ReaderType::New();
   reader->SetFileName( inputFile );
-  reader->Update();
 
-  typedef itk::ImageFileWriter< ImageType >  WriterType;
-  WriterType::Pointer writer = WriterType::New();
-  writer->SetFileName( outputFlippedImageFile );
-
-  typedef itk::FlipImageFilter< ImageType >  FilterType;
+  //Setup itk::FlipImageFilter
+  typedef itk::FlipImageFilter<ImageType> FilterType;
   FilterType::Pointer filter = FilterType::New();
-
-  //Setup input to flip image filter
-  typedef FilterType::FlipAxesArrayType     FlipAxesArrayType;
+  filter->SetInput( reader->GetOutput() );
+  typedef FilterType::FlipAxesArrayType FlipAxesArrayType;
   FlipAxesArrayType flipArray;
   flipArray[0] = flipAxisX;
   flipArray[1] = flipAxisY;
   flipArray[2] = flipAxisZ;
-
-  //Perform filtering
   filter->SetFlipAxes( flipArray );
-  filter->SetInput( reader->GetOutput());
 
-  ImageType::Pointer DicomImage = ImageType::New();
-  DicomImage = filter->GetOutput();
-
-  //Write flipped file out
-  writer->SetInput(DicomImage);
+  //Setup itk::ImageFileWriter
+  typedef itk::ImageFileWriter<ImageType> WriterType;
+  WriterType::Pointer writer = WriterType::New();
+  writer->SetInput( filter->GetOutput() );
+  writer->SetFileName( outputFlippedImageFile );
   writer->Update();
 
   return EXIT_SUCCESS;
 }
 
 
-
-
-//int vtkCTHandBoneClass::fiducial_threshold(const char* inputImage, const char* outputImage, const char* fiducialfile, const char* logfile )
-int vtkCTHandBoneClass::fiducial_threshold(const char* inputImage, const char* outputImage)
+/**
+ *
+ int vtkCTHandBoneClass::fiducial_threshold(
+ const char* inputImage,
+ const char* outputImage,
+ const char* fiducialfile,
+ const char* logfile
+ )
+*/
+int vtkCTHandBoneClass::fiducial_threshold(
+                                           const char* inputFilename,
+                                           const char* outputFilename)
 {
-  std::cerr << "Fiducial Threshold: " << std::endl;
-
-  //Read in file
-  // Setup pixel type and input image type
-  typedef itk::Image< float,  3 >   ImageType;
-
-  typedef itk::ImageFileReader<ImageType> InputImageType;
-  InputImageType::Pointer input = InputImageType::New();
-  input->SetFileName( inputImage );
-  input->Update();
-
-  ImageType::Pointer image = ImageType::New();
-  image = input->GetOutput();
-
-  //Convert image to Slicer3 space
-  ImageType::DirectionType imageDir = image->GetDirection( );
-  ImageType::PointType origin = image->GetOrigin( );
-  ImageType::SpacingType spacing = image->GetSpacing( );
-
   //TODO
   /*
-  int dominantAxisRL = itk::Function::Max3(imageDir[0][0],imageDir[1][0],imageDir[2][0]);
-  int signRL = itk::Function::Sign(imageDir[dominantAxisRL][0]);
-  int dominantAxisAP = itk::Function::Max3(imageDir[0][1],imageDir[1][1],imageDir[2][1]);
-  int signAP = itk::Function::Sign(imageDir[dominantAxisAP][1]);
-  int dominantAxisSI = itk::Function::Max3(imageDir[0][2],imageDir[1][2],imageDir[2][2]);
-  int signSI = itk::Function::Sign(imageDir[dominantAxisSI][2]);
 
-  ImageType::DirectionType DirectionToRAS;
-  DirectionToRAS.SetIdentity( );
+    typedef itk::ImageFileReader<ImageType> ReaderType;
+    ReaderType::Pointer reader = ReaderType::New();
+    reader->SetFileName(inputFilename);
+    reader->Update();
+
+    ImageType::Pointer image = ImageType::New();
+    image = reader->GetOutput();
+
+    //Convert image to Slicer3 space
+    ImageType::DirectionType imageDir = image->GetDirection( );
+    ImageType::PointType origin = image->GetOrigin( );
+    ImageType::SpacingType spacing = image->GetSpacing( );
+
+    int dominantAxisRL = itk::Function::Max3(imageDir[0][0],imageDir[1][0],imageDir[2][0]);
+    int signRL = itk::Function::Sign(imageDir[dominantAxisRL][0]);
+    int dominantAxisAP = itk::Function::Max3(imageDir[0][1],imageDir[1][1],imageDir[2][1]);
+    int signAP = itk::Function::Sign(imageDir[dominantAxisAP][1]);
+    int dominantAxisSI = itk::Function::Max3(imageDir[0][2],imageDir[1][2],imageDir[2][2]);
+    int signSI = itk::Function::Sign(imageDir[dominantAxisSI][2]);
+
+    ImageType::DirectionType DirectionToRAS;
+    DirectionToRAS.SetIdentity( );
     if (signRL == 1)
     {
     DirectionToRAS[dominantAxisRL][dominantAxisRL] = -1.0;
@@ -400,29 +289,29 @@ int vtkCTHandBoneClass::fiducial_threshold(const char* inputImage, const char* o
     outfile.close();
   */
 
-  typedef itk::ImageFileReader<ImageType> InputImageType2;
-  InputImageType2::Pointer input2 = InputImageType2::New();
-  input2->SetFileName( inputImage );
-  input2->Update();
+  typedef itk::Image<float,3> ImageType;
 
+  //Setup itk::ImageFileReader
+  typedef itk::ImageFileReader<ImageType> ReaderType;
+  ReaderType::Pointer reader = ReaderType::New();
+  reader->SetFileName( inputFilename );
+
+  //Setup itk::BinaryThresholdImageFilter
   typedef itk::BinaryThresholdImageFilter<ImageType,ImageType> FilterType;
   FilterType::Pointer filter = FilterType::New();
-  filter->SetInput(input2->GetOutput());
+  filter->SetInput( reader->GetOutput() );
   filter->SetOutsideValue(0);
   filter->SetInsideValue(1);
   //    filter->SetLowerThreshold(threshvalue);
+  // TODO
   filter->SetLowerThreshold(150);
   filter->SetUpperThreshold(3000);
-  filter->Update();
 
   //typedef itk::RescaleIntensityImageFilter<ImageType, ImageType> RescaleFilterType;
   //RescaleFilterType::Pointer rescaler = RescaleFilterType::New();
   //rescaler->SetOutputMinimum(0);
   //rescaler->SetOutputMaximum(1);
   //rescaler->SetInput(filter->GetOutput());
-
-  ////Thresholding code
-  //typedef  float  InputPixelType;
 
   //typedef itk::ThresholdImageFilter<ImageType> FilterType;
   //FilterType::Pointer filter = FilterType::New();
@@ -431,103 +320,193 @@ int vtkCTHandBoneClass::fiducial_threshold(const char* inputImage, const char* o
   //filter->ThresholdBelow(threshvalue);
   //filter->Update();
 
-  //Write flipped file out
-  typedef itk::ImageFileWriter< ImageType >  WriterType;
+  //Setup itk::ImageFileWriter
+  typedef itk::ImageFileWriter<ImageType> WriterType;
   WriterType::Pointer writer = WriterType::New();
-  writer->SetFileName( outputImage );
-  writer->SetInput(filter->GetOutput());
+  writer->SetInput( filter->GetOutput() );
+  writer->SetFileName( outputFilename );
   writer->Update();
 
   return EXIT_SUCCESS;
 }
 
 
-
-int vtkCTHandBoneClass::largest_component( const char* inputImage, const char* outputImage )
+/**
+ *
+ */
+int vtkCTHandBoneClass::blur(
+                             const char* inputImage,
+                             const char* outputImage,
+                             const char* gaussianVariance,
+                             const char* maxKernelWidth)
 {
-  std::cerr << "Island Removal and Fill: " << std::endl;
+  typedef  signed short PixelType;
 
+  typedef itk::Image<signed short,3>  InputImageType;
+  typedef itk::Image<unsigned char,3> OutputImageType;
+
+  //Setup itk::ImageFileReader
+  typedef itk::ImageFileReader<InputImageType> ReaderType;
+  ReaderType::Pointer reader = ReaderType::New();
+  reader->SetFileName( inputImage );
+
+  //Setup itk::RescaleIntensityImageFilter
+  typedef itk::RescaleIntensityImageFilter<InputImageType,InputImageType> RescaleFilterType;
+  RescaleFilterType::Pointer rescaler = RescaleFilterType::New();
+  rescaler->SetInput( reader->GetOutput() );
+  rescaler->SetOutputMinimum(0);
+  rescaler->SetOutputMaximum(255);
+
+  //Setup itk::DiscreteGaussianImageFilter
+  typedef itk::DiscreteGaussianImageFilter<InputImageType,InputImageType> FilterType;
+  FilterType::Pointer filter = FilterType::New();
+  filter->SetInput(rescaler->GetOutput());
+  filter->SetVariance( atoi(gaussianVariance) );
+  filter->SetMaximumKernelWidth( atoi(maxKernelWidth) );
+
+  //Setup itk::RescaleIntensityImageFilter
+  typedef itk::RescaleIntensityImageFilter<InputImageType, OutputImageType> RescaleFilterType2;
+  RescaleFilterType2::Pointer rescaler2 = RescaleFilterType2::New();
+  rescaler2->SetInput( filter->GetOutput() );
+  rescaler2->SetOutputMinimum(0);
+  rescaler2->SetOutputMaximum(255);
+
+  //Setup itk::ImageFileWriter
+  typedef itk::ImageFileWriter<OutputImageType> WriterType;
+  WriterType::Pointer writer = WriterType::New();
+  writer->SetInput(rescaler2->GetOutput());
+  writer->SetFileName( outputImage );
+  writer->Update();
+
+  return EXIT_SUCCESS;
+}
+
+
+/**
+ *
+ */
+int vtkCTHandBoneClass::binary_threshold(
+                                         const char* inputFilename,
+                                         const char* outputFilename,
+                                         const char* _lowerThreshold,
+                                         const char* _upperThreshold)
+{
+  // TODO signed vs unsigned
+  typedef  signed short  InputPixelType;
+  const InputPixelType lowerThreshold = atoi( _lowerThreshold );
+  const InputPixelType upperThreshold = atoi( _upperThreshold );
+
+  // Setup pixel type and input image type
+  typedef itk::Image<InputPixelType,3>   ImageType;
+
+  ////Read in dicom series
+  //itk::GDCMSeriesFileNames::Pointer FileNameGenerator = itk::GDCMSeriesFileNames::New();
+  //FileNameGenerator->SetUseSeriesDetails(false);
+  //FileNameGenerator->SetDirectory( inputDirectory );
+
+  //std::vector<std::string> seriesUIDs = FileNameGenerator->GetSeriesUIDs();
+
+  //typedef itk::ImageSeriesReader< ImageType > ImageSeriesReaderType;
+  //ImageSeriesReaderType::Pointer imageSeriesReader = ImageSeriesReaderType::New();
+  //itk::GDCMImageIO::Pointer dicomIO = itk::GDCMImageIO::New();
+
+  //imageSeriesReader->SetFileNames( FileNameGenerator->GetFileNames( seriesUIDs[0] ) );
+  //imageSeriesReader->SetImageIO( dicomIO );
+  //imageSeriesReader->Update();
+
+  typedef itk::ImageFileReader<ImageType> ReaderType;
+  ReaderType::Pointer input = ReaderType::New();
+  input->SetFileName(inputFilename);
+
+  typedef itk::BinaryThresholdImageFilter<ImageType,ImageType> FilterType;
+  FilterType::Pointer filter = FilterType::New();
+  filter->SetInput(input->GetOutput());
+  filter->SetOutsideValue(255);
+  filter->SetInsideValue(0);
+  filter->SetLowerThreshold(lowerThreshold);
+  filter->SetUpperThreshold(upperThreshold);
+
+  typedef itk::RescaleIntensityImageFilter<ImageType,ImageType> RescaleFilterType;
+  RescaleFilterType::Pointer rescaler = RescaleFilterType::New();
+  rescaler->SetInput(filter->GetOutput());
+  rescaler->SetOutputMinimum(0);
+  rescaler->SetOutputMaximum(255);
+
+  typedef itk::ImageFileWriter<ImageType>  WriterType;
+  WriterType::Pointer writer = WriterType::New();
+  writer->SetInput(rescaler->GetOutput());
+  writer->SetFileName(outputFilename);
+  writer->Update();
+
+  return EXIT_SUCCESS;
+}
+
+
+/**
+ *
+ * std::cerr << "Function: Island Removal and Fill: " << std::endl;
+ *
+ * Extract Label of Interest
+ */
+int vtkCTHandBoneClass::largest_component(
+                                          const char* inputImage,
+                                          const char* outputImage)
+{
   typedef unsigned char PixelType;
   const int dimension=3;
-  typedef itk::Image<PixelType, dimension> ImageType;
+  typedef itk::Image<PixelType,dimension> ImageType;
 
   typedef itk::ImageFileReader<ImageType> ReaderType;
   ReaderType::Pointer fileReader = ReaderType::New();
   fileReader->SetFileName( inputImage );
-  fileReader->Update();
 
-  /* Extract Label of Interest */
+
+  std::cout << "Extract Label" << std::endl;
   typedef itk::BinaryThresholdImageFilter<ImageType,ImageType> BinaryFilterType;
   BinaryFilterType::Pointer extractLabelFilter = BinaryFilterType::New();
-  extractLabelFilter->SetInput(fileReader->GetOutput());
+  extractLabelFilter->SetInput( fileReader->GetOutput() );
   extractLabelFilter->SetLowerThreshold(1);
   extractLabelFilter->SetUpperThreshold(255);
   extractLabelFilter->SetInsideValue(1);
   extractLabelFilter->SetOutsideValue(0);
-  extractLabelFilter->Update();
 
-  std::cout << "Extract Label" << std::endl;
 
+  std::cout << "Connected Component" << std::endl;
   typedef itk::ConnectedComponentImageFilter<ImageType,ImageType,ImageType> ConnectedFilterType;
   ConnectedFilterType::Pointer connectedFilter = ConnectedFilterType::New();
   connectedFilter->SetInput( extractLabelFilter->GetOutput() );
-  connectedFilter->Update();
 
-  std::cout << "Connected Component" << std::endl;
 
+  std::cout << "Relabel Image" << std::endl;
   typedef itk::RelabelComponentImageFilter<ImageType,ImageType> RelabelFilterType;
   RelabelFilterType::Pointer relabelFilter = RelabelFilterType::New();
   relabelFilter->SetInput(connectedFilter->GetOutput());
-  relabelFilter->Update();
 
-  std::cout << "Relabel Image" << std::endl;
 
+  std::cout << "Binary Image" << std::endl;
   BinaryFilterType::Pointer binaryFilter = BinaryFilterType::New();
-  binaryFilter->SetInput(relabelFilter->GetOutput());
+  binaryFilter->SetInput( relabelFilter->GetOutput() );
   binaryFilter->SetLowerThreshold(1);
   binaryFilter->SetUpperThreshold(1);
   binaryFilter->SetInsideValue(1);
   binaryFilter->SetOutsideValue(0);
-  binaryFilter->Update();
 
-  std::cout << "Binary Threshold" << std::endl;
 
   typedef itk::ImageFileWriter<ImageType> WriterType;
   WriterType::Pointer fileWriter= WriterType::New();
-  fileWriter->SetFileName( outputImage );
   fileWriter->SetInput( binaryFilter->GetOutput() );
+  fileWriter->SetFileName( outputImage );
   fileWriter->Update();
 
   return EXIT_SUCCESS;
 }
 
 
-//----------------------------------------------------------------------------
-void vtkCTHandBoneClass::PrintSelf(ostream& os,vtkIndent indent) {
-  /*
-    int x,y;
-    os << indent << "------------------------------------------ CLASS ----------------------------------------------" << endl;
-    this->vtkImageEMGenericClass::PrintSelf(os,indent);  
-    os << indent << "ProbDataPtr:             " << this->ProbDataPtr << endl;
-    os << indent << "ProbDataIncY:            " << this->ProbDataIncY << endl;
-    os << indent << "ProbDataIncZ:            " << this->ProbDataIncZ << endl;
-
-    os << indent << "LogMu:                   ";
-    for (x= 0 ; x < this->NumInputImages; x ++) os << this->LogMu[x] << " ";
-    os<< endl;
-
-    os << indent << "LogCovariance:           ";
-    for (y= 0 ; y < this->NumInputImages; y ++) {
-    for (x= 0; x < this->NumInputImages; x++)  os << this->LogCovariance[y][x] << " " ;
-    if ( y < (this->NumInputImages-1)) os<< "| ";
-    }
-    os<< endl;
-
-    os << indent << "ReferenceStandardPtr:    ";
-    if (this->ReferenceStandardPtr) {
-    os << this->ReferenceStandardPtr << endl;
-    } else {os << "(None)" << endl;}
-
-    os << indent << "PrintQuality:            " << this->PrintQuality << endl;
-  */
+/**
+ *
+ */
+void vtkCTHandBoneClass::PrintSelf(ostream& os, vtkIndent indent) {
+  os << indent << "-----------vtkCTHandBoneClass------- CLASS ------------------" << endl;
 }
+
+

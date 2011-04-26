@@ -32,14 +32,14 @@
 #include "qSlicerEMSegmentRunSegmentationStep.h"
 #include "ui_qSlicerEMSegmentRunSegmentationStep.h"
 #include "qSlicerEMSegmentRunSegmentationStep_p.h"
-#include "vtkSlicerEMSegmentLogic.h"
+#include "vtkEMSegmentLogic.h"
 
 // EMSegment/MRML includes
 #include <vtkEMSegmentMRMLManager.h>
 #include <vtkMRMLEMSWorkingDataNode.h>
 #include <vtkMRMLEMSTargetNode.h>
 #include <vtkMRMLVolumeNode.h>
-#include <vtkMRMLROINode.h>
+#include <vtkMRMLAnnotationROINode.h>
 
 // VTKMRML includes
 #include "vtkMRMLSliceLogic.h"
@@ -74,7 +74,7 @@ void qSlicerEMSegmentRunSegmentationStepPrivate::setupUi(
 }
 
 //-----------------------------------------------------------------------------
-void qSlicerEMSegmentRunSegmentationStepPrivate::setMRMLROINode(vtkMRMLROINode* node)
+void qSlicerEMSegmentRunSegmentationStepPrivate::setMRMLROINode(vtkMRMLAnnotationROINode* node)
 {
   Q_Q(qSlicerEMSegmentRunSegmentationStep);
 
@@ -198,14 +198,14 @@ void qSlicerEMSegmentRunSegmentationStepPrivate::initializeNode(vtkMRMLNode* nod
 {
   Q_ASSERT(this->sender());
   QString nodeName = this->sender()->property("NodeName").toString();
-  vtkMRMLROINode * roiNode = vtkMRMLROINode::SafeDownCast(node);
+  vtkMRMLAnnotationROINode * roiNode = vtkMRMLAnnotationROINode::SafeDownCast(node);
   Q_ASSERT(roiNode);
   roiNode->SetName(nodeName.toLatin1());
   roiNode->SetVisibility(0);
 }
 
 //-----------------------------------------------------------------------------
-vtkMRMLROINode* qSlicerEMSegmentRunSegmentationStepPrivate::createROINode()
+vtkMRMLAnnotationROINode* qSlicerEMSegmentRunSegmentationStepPrivate::createROINode()
 {
   Q_Q(qSlicerEMSegmentRunSegmentationStep);
 
@@ -213,12 +213,12 @@ vtkMRMLROINode* qSlicerEMSegmentRunSegmentationStepPrivate::createROINode()
 
   // Look up existing ROI nodes
   vtkMRMLScene* scene = q->mrmlScene();
-  int numNodes = scene->GetNumberOfNodesByClass("vtkMRMLROINode");
+  int numNodes = scene->GetNumberOfNodesByClass("vtkMRMLAnnotationROINode");
 
   // Remove any ROI nodes named "SegmentationROI"
   for (int i = 0; i < numNodes; ++i)
     {
-    vtkMRMLNode* node = scene->GetNthNodeByClass(i, "vtkMRMLROINode");
+    vtkMRMLNode* node = scene->GetNthNodeByClass(i, "vtkMRMLAnnotationROINode");
     if (node && node->GetName() && !roiNodeName.compare(node->GetName()))
       {
       scene->RemoveNode(node);
@@ -231,7 +231,7 @@ vtkMRMLROINode* qSlicerEMSegmentRunSegmentationStepPrivate::createROINode()
   nodeFactory.setProperty("NodeName", roiNodeName);
   connect(&nodeFactory, SIGNAL(nodeInitialized(vtkMRMLNode*)),
          this, SLOT(initializeNode(vtkMRMLNode*)));
-  return vtkMRMLROINode::SafeDownCast(nodeFactory.createNode("vtkMRMLROINode"));
+  return vtkMRMLAnnotationROINode::SafeDownCast(nodeFactory.createNode("vtkMRMLAnnotationROINode"));
 }
 
 //-----------------------------------------------------------------------------

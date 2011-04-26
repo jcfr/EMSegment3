@@ -33,7 +33,7 @@
 class qSlicerEMSegmentWorkflowWidgetStepPrivate;
 class qSlicerEMSegmentWorkflowWidget;
 class vtkEMSegmentMRMLManager;
-class vtkSlicerEMSegmentLogic;
+class vtkEMSegmentLogic;
 
 /// \ingroup Slicer_QtModules_EMSegment
 class Q_SLICER_QTMODULES_EMSEGMENT_EXPORT qSlicerEMSegmentWorkflowWidgetStep :
@@ -52,7 +52,7 @@ public:
   vtkMRMLScene *           mrmlScene() const;
   vtkEMSegmentMRMLManager* mrmlManager() const;
 
-  void setEMSegmentLogic(vtkSlicerEMSegmentLogic* logic);
+  void setEMSegmentLogic(vtkEMSegmentLogic* logic);
 
 public slots:
   void setMRMLManager(vtkEMSegmentMRMLManager * newMRMLManager);
@@ -65,7 +65,7 @@ signals:
 
 protected:
 
-  vtkSlicerEMSegmentLogic* emSegmentLogic()const;
+  vtkEMSegmentLogic* emSegmentLogic()const;
 
 protected:
   QScopedPointer<qSlicerEMSegmentWorkflowWidgetStepPrivate> d_ptr;

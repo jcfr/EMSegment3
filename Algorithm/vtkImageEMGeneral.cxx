@@ -875,79 +875,103 @@ float vtkImageEMGeneral::CalcSimularityMeasure (vtkImageData *Image1, vtkImageDa
   return result;
 }  
 
-// normalize them between 0 and 1 
-double vtkImageEMGeneral::CalcSoftSimularityMeasureNormalize (vtkImageData *Image1, vtkImageData *Image2) {
-  double min = Image1->GetScalarRange()[0];
-  if (min > Image2->GetScalarRange()[0]) {
-    min = Image2->GetScalarRange()[0];
+// First normalize images  between 0 and 1 and then calcuate dice   
+// normalizationType = 0 both images are normalized independently 
+//                                = 1 both images are normalized together by using the max and min scalar values across the two images 
+//                                = 2 only the first image is normalized 
+double vtkImageEMGeneral::CalcSoftSimularityMeasureNormalize (vtkImageData *Image1, vtkImageData *Image2, int normalizationType) {
+   double min1 = Image1->GetScalarRange()[0];
+   double max1 = Image1->GetScalarRange()[1];
+   double min2 = Image2->GetScalarRange()[0]; 
+   double max2 = Image2->GetScalarRange()[1];
+
+   //cout << "sfdds1 " <<   min1 << " " << max1 << endl;
+   //cout << "sfdds2 " <<   min2 << " " << max2 << endl;
+
+   switch  (normalizationType) {
+      case 0: break;
+      case 1: if (min1 > min2)  { min1 = min2;
+                     } else { min2 = min1; }
+                     if (max1 < max2)  { max1 = max2;
+                     } else { max2 = max1; } 
+                     break;
+       case 2: min2 = 0; max2 = 1.0; break;
+       default :   
+                   vtkErrorMacro("Type " <<   normalizationType << " is currently not installed");
+               return -1;
+     }
+
+   double norm1 = max1 - min1;
+   if (norm1== 0 ) { 
+      norm1 = 1; 
+    } else {
+    norm1 = 1.0/norm1;
    }
 
-  double max = Image1->GetScalarRange()[1];
-  if (max < Image2->GetScalarRange()[1]) {
-    max = Image2->GetScalarRange()[1];
+   // cout << "sfdds " <<   min1 << " " << max1 << " " << norm1 << endl;
+
+
+  vtkImageCast* CAST1 = vtkImageCast::New();
+  CAST1->SetInput(Image1);  
+  CAST1->SetOutputScalarTypeToFloat(); 
+  CAST1->Update();
+
+   vtkImageMathematics *SHIFT1 = vtkImageMathematics::New();
+   SHIFT1->SetOperationToAddConstant(); 
+   SHIFT1->SetInput1(CAST1->GetOutput());
+   SHIFT1->SetConstantC(- min1 ); 
+   SHIFT1->Update();
+
+   vtkImageMathematics *NORM1 = vtkImageMathematics::New();
+   NORM1->SetOperationToMultiplyByK(); 
+   NORM1->SetInput1(SHIFT1->GetOutput());
+   NORM1->SetConstantK(norm1);
+   NORM1->Update();
+
+   double norm2 = max2 - min2;
+   if (norm2 == 0) { 
+      norm2 = 1; 
+    } else {
+    norm2 = 1.0/norm2;
    }
-   
-  double norm = max - min;
-  if (norm) { 
-    norm = 1; 
-  } else {
-    norm = 1.0/norm;
-  }
-  
-  vtkImageCast* cast1 = vtkImageCast::New();
-  cast1->SetInput(Image1);  
-  cast1->SetOutputScalarTypeToFloat(); 
-  cast1->Update();
 
-   vtkImageMathematics *shift1 = vtkImageMathematics::New();
-   shift1->SetOperationToAddConstant(); 
-   shift1->SetInput(0,cast1->GetOutput());
-   shift1->SetConstantC(- min ); 
-   shift1->Update();
+  vtkImageCast* CAST2 = vtkImageCast::New();
+  CAST2->SetInput(Image2);  
+  CAST2->SetOutputScalarTypeToFloat(); 
+  CAST2->Update();
 
-   vtkImageMathematics *norm1 = vtkImageMathematics::New();
-   norm1->SetOperationToMultiplyByK(); 
-   norm1->SetInput(0,shift1->GetOutput());
-   norm1->SetConstantK(norm);
-   norm1->Update();
+   vtkImageMathematics *SHIFT2 = vtkImageMathematics::New();
+   SHIFT2->SetOperationToAddConstant(); 
+   SHIFT2->SetInput1(CAST2->GetOutput());
+   SHIFT2->SetConstantC(- min2 ); 
+   SHIFT2->Update();
 
-  vtkImageCast* cast2 = vtkImageCast::New();
-  cast2->SetInput(Image2);  
-  cast2->SetOutputScalarTypeToFloat(); 
-  cast2->Update();
+   vtkImageMathematics *NORM2 = vtkImageMathematics::New();
+   NORM2->SetOperationToMultiplyByK(); 
+   NORM2->SetInput1(SHIFT2->GetOutput());
+   NORM2->SetConstantK(norm2);
+   NORM2->Update();
 
-   vtkImageMathematics *shift2 = vtkImageMathematics::New();
-   shift2->SetOperationToAddConstant(); 
-   shift2->SetInput(0,cast2->GetOutput());
-   shift2->SetConstantC(- min ); 
-   shift2->Update();
-
-   vtkImageMathematics *norm2 = vtkImageMathematics::New();
-   norm2->SetOperationToMultiplyByK(); 
-   norm2->SetInput(0,shift2->GetOutput());
-   norm2->SetConstantK(norm);
-   norm2->Update();
-
-   double value = this->CalcSoftSimularityMeasure (norm1->GetOutput(), norm2->GetOutput());
-   norm1->Delete();
-   shift1->Delete();
-   cast1->Delete();
-   norm2->Delete();
-   shift2->Delete();
-   cast2->Delete();
+   double value = this->CalcSoftSimularityMeasure (NORM1->GetOutput(), NORM2->GetOutput());
+   NORM1->Delete();
+   SHIFT1->Delete();
+   CAST1->Delete();
+   NORM2->Delete();
+   SHIFT2->Delete();
+   CAST2->Delete();
 
    return value;
  }
 
 // images are not thresholded - have to be of the same chast and between 0 and 1
 double vtkImageEMGeneral::CalcSoftSimularityMeasure (vtkImageData *Image1, vtkImageData *Image2)  {
-   if ((Image1->GetScalarRange()[0] < 0) || (Image1->GetScalarRange()[1] > 1) )  {
-     vtkErrorMacro("Scalars of first image are out of range [0,1]")
+   if ((Image1->GetScalarRange()[0] < 0) || (Image1->GetScalarRange()[1] > 1.0001) )  {
+     vtkErrorMacro("Scalars of first image are out of range [0,1] - Actual Range [" <<Image1->GetScalarRange()[0] <<"," << Image1->GetScalarRange()[1]  << "]" )
      return -1; 
    } 
 
-   if ((Image2->GetScalarRange()[0] < 0) || (Image2->GetScalarRange()[1] > 1) )  {
-     vtkErrorMacro("Scalars of second image are out of range [0,1]")
+   if ((Image2->GetScalarRange()[0] < 0) || (Image2->GetScalarRange()[1] > 1.0001) )  {
+     vtkErrorMacro("Scalars of second image are out of range [0,1] -Actual Range [" <<Image2->GetScalarRange()[0] <<"," << Image2->GetScalarRange()[1]  << "]" )
      return -1; 
    } 
 
@@ -958,8 +982,8 @@ double vtkImageEMGeneral::CalcSoftSimularityMeasure (vtkImageData *Image1, vtkIm
 
    vtkImageMathematics *UNION = vtkImageMathematics::New();
    UNION->SetOperationToMultiply();
-   UNION->SetInput(0,Image1);
-   UNION->SetInput(1,Image2);
+   UNION->SetInput1(Image1);
+   UNION->SetInput2(Image2);
    UNION->Update();
 
    vtkImageSumOverVoxels* VOXELSUM  = vtkImageSumOverVoxels::New();

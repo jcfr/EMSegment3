@@ -24,11 +24,11 @@
 
 // EMSegment includes
 #include "qSlicerEMSegmentAnatomicalTreeWidget.h"
-#include "vtkSlicerEMSegmentLogic.h"
+#include "vtkEMSegmentLogic.h"
 
 // EMSegment/MRML includes
 #include <vtkEMSegmentMRMLManager.h>
-#include <vtkMRMLEMSNode.h>
+#include <vtkMRMLEMSTemplateNode.h>
 
 // Slicer includes
 #include <vtkSlicerColorLogic.h>
@@ -63,8 +63,8 @@ int qSlicerEMSegmentAnatomicalTreeWidgetTest1( int argc, char * argv [] )
   colorLogic->SetMRMLScene(scene);
   colorLogic->AddDefaultColorNodes();
 
-  VTK_CREATE(vtkSlicerEMSegmentLogic, logic);
-  ctkVerify2(logic->GetMRMLManager(), "Problem with vtkSlicerEMSegmentLogic::GetMRMLManager");
+  VTK_CREATE(vtkEMSegmentLogic, logic);
+  ctkVerify2(logic->GetMRMLManager(), "Problem with vtkEMSegmentLogic::GetMRMLManager");
 
   qSlicerEMSegmentAnatomicalTreeWidget anatomicalTreeWidget;
   ctkExerciseMethod(&anatomicalTreeWidget, setMRMLScene, mrmlScene,
@@ -84,11 +84,11 @@ int qSlicerEMSegmentAnatomicalTreeWidgetTest1( int argc, char * argv [] )
 
   // Get reference of the first vtkMRMLEMSNode
   std::vector<vtkMRMLNode*> emsNodes;
-  scene->GetNodesByClass("vtkMRMLEMSNode", emsNodes);
+  scene->GetNodesByClass("vtkMRMLEMSTemplateNode", emsNodes);
   ctkVerify2(emsNodes.size() >= 1, "Scene does NOT contain vtkMRMLEMSNode nodes");
-  vtkMRMLEMSNode * emsNode = vtkMRMLEMSNode::SafeDownCast(emsNodes.at(0));
+  vtkMRMLEMSTemplateNode * emsNode = vtkMRMLEMSTemplateNode::SafeDownCast(emsNodes.at(0));
   ctkVerify2(emsNode, "Problem with vtkMRMLScene::GetNodesByClass");
-  ctkExerciseMethod(logic->GetMRMLManager(), SetNode, GetEMSNode,
+  ctkExerciseMethod(logic->GetMRMLManager(), SetNodeWithCheck, GetNode,
                     emsNode, emsNode);
 
   // Set EMSNode to the widget

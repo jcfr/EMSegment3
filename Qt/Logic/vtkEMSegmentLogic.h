@@ -67,15 +67,6 @@ public:
       this->MRMLManager->RegisterMRMLNodesWithScene(); 
       }
 
-  /// Register MRML Node classes to Scene. Gets called automatically when the MRMLScene is attached to this logic class.
-  virtual void RegisterNodes()
-  {
-    // std::cout << "Registering Nodes.." << std::endl;
-    // make sure the scene is attached
-    this->MRMLManager->SetMRMLScene(this->GetMRMLScene());
-    this->RegisterMRMLNodesWithScene();
-  }
-
   virtual void SetAndObserveMRMLScene(vtkMRMLScene* scene)
       {
       Superclass::SetAndObserveMRMLScene(scene);
@@ -144,8 +135,6 @@ public:
   void AddDefaultTasksToList(const char* FilePath, std::vector<std::string> & DefaultTasksName,  std::vector<std::string> & DefaultTasksFile, 
                  std::vector<std::string> & DefinePreprocessingTasksName, std::vector<std::string>  & DefinePreprocessingTasksFile);
 //ETX
-
-  int StartSegmentationWithoutPreprocessingAndSaving();
 
 protected: 
   // the mrml manager is created in the constructor
@@ -221,7 +210,6 @@ protected:
 private:
   vtkEMSegmentLogic(const vtkEMSegmentLogic&);
   void operator=(const vtkEMSegmentLogic&);
-
 };
 
 #endif

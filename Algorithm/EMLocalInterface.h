@@ -257,3 +257,4 @@ inline int EMLocalInterface_GetDefaultNumberOfThreads(int DisableFlag) {
   return result;
 }
 #endif
+//ETX

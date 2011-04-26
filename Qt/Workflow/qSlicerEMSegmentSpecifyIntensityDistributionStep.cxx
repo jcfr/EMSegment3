@@ -160,7 +160,7 @@ void qSlicerEMSegmentSpecifyIntensityDistributionStepPrivate::onCurrentTreeNodeC
     // MeanMatrix
     for(int colId = 0; colId < targetVolumeCount; colId++)
       {
-      meanValues << q->mrmlManager()->GetTreeNodeDistributionMean(treeNodeId, colId);
+      meanValues << q->mrmlManager()->GetTreeNodeDistributionMeanWithCorrection(treeNodeId, colId);
       }
 
     // CovarianceMatrix
@@ -168,7 +168,7 @@ void qSlicerEMSegmentSpecifyIntensityDistributionStepPrivate::onCurrentTreeNodeC
       {
       for(int colId = 0; colId < targetVolumeCount; colId++)
         {
-        covarianceValues << q->mrmlManager()->GetTreeNodeDistributionCovariance(
+        covarianceValues << q->mrmlManager()->GetTreeNodeDistributionLogCovarianceWithCorrection(
             treeNodeId, rowId, colId);
         }
       }

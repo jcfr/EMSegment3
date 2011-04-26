@@ -49,7 +49,7 @@
 #include <cstdlib>
 
 // EMSegment/Logic includes
-#include <vtkSlicerEMSegmentLogic.h>
+#include <vtkEMSegmentLogic.h>
 
 //-----------------------------------------------------------------------------
 /// \ingroup Slicer_QtModules_EMSegment
@@ -62,7 +62,7 @@ public:
   qSlicerEMSegmentModuleWidgetPrivate(qSlicerEMSegmentModuleWidget& object);
   ~qSlicerEMSegmentModuleWidgetPrivate();
 
-  vtkSlicerEMSegmentLogic* logic() const;
+  vtkEMSegmentLogic* logic() const;
 
   ctkWorkflow*                    Workflow;
   ctkWorkflowStackedWidget *      WorkflowWidget;
@@ -92,10 +92,10 @@ qSlicerEMSegmentModuleWidgetPrivate::~qSlicerEMSegmentModuleWidgetPrivate()
 // qSlicerEMSegmentModuleWidgetPrivate methods
 
 //-----------------------------------------------------------------------------
-vtkSlicerEMSegmentLogic* qSlicerEMSegmentModuleWidgetPrivate::logic()const
+vtkEMSegmentLogic* qSlicerEMSegmentModuleWidgetPrivate::logic()const
 {
   Q_Q(const qSlicerEMSegmentModuleWidget);
-  return vtkSlicerEMSegmentLogic::SafeDownCast(q->logic());
+  return vtkEMSegmentLogic::SafeDownCast(q->logic());
 }
 
 //-----------------------------------------------------------------------------

@@ -247,7 +247,11 @@ class VTK_EMSEGMENT_EXPORT vtkImageEMGeneral : public vtkImageMultipleInputFilte
   static float CalcSimularityMeasure (vtkImageData *Image1, vtkImageData *Image2,float val, int PrintRes);
 
   //  Softt Dice Measure - Normalize between 0 -1  
-  double CalcSoftSimularityMeasureNormalize (vtkImageData *Image1, vtkImageData *Image2) ;
+  // normalizationType = 0 both images are normalized independently 
+  //                                = 1 both images are normalized together by using the max and min scalar values across the two images 
+  //                                = 2 only the first image is normalized 
+
+   double CalcSoftSimularityMeasureNormalize (vtkImageData *Image1, vtkImageData *Image2, int independentFlag) ;
   //  Softt Dice Measure 
   double CalcSoftSimularityMeasure (vtkImageData *Image1, vtkImageData *Image2) ;
 

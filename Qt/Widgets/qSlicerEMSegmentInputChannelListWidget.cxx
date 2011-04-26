@@ -43,6 +43,7 @@
 // EMSegment/MRML includes
 #include <vtkEMSegmentMRMLManager.h>
 #include <vtkMRMLEMSTargetNode.h>
+#include <vtkMRMLEMSGlobalParametersNode.h>
 
 
 //--------------------------------------------------------------------------
@@ -277,14 +278,15 @@ void qSlicerEMSegmentInputChannelListWidget::updateMRMLFromWidget()
     return;
     }
 
-  vtkMRMLEMSTargetNode *inputNodes = this->mrmlManager()->GetTargetInputNode();
+  //vtkMRMLEMSTargetNode *inputNodes = this->mrmlManager()->GetTargetInputNode();
+  vtkMRMLEMSVolumeCollectionNode *inputNodes = this->mrmlManager()->GetTargetInputNode();
   if (!inputNodes)
     {
     logger.warn("updateWidgetFromMRML - inputNodes is NULL");
     return;
     }
 
-  inputNodes->SetNumberOfInputChannelName(this->inputChannelCount());
+  //inputNodes->SetNumberOfInputChannelName(this->inputChannelCount());
 
   for(int rowId = 0; rowId < this->inputChannelCount(); rowId++)
     {
@@ -302,7 +304,7 @@ void qSlicerEMSegmentInputChannelListWidget::updateMRMLFromWidget()
       }
 
     // Update channel name
-    inputNodes->SetNthInputChannelName(rowId, d->TableWidget->item(rowId, 0)->text().toLatin1());
+    inputNodes->GetNthVolumeNode(rowId)->SetName(d->TableWidget->item(rowId, 0)->text().toLatin1());
     }
 }
 
@@ -317,17 +319,21 @@ void qSlicerEMSegmentInputChannelListWidget::updateWidgetFromMRML()
     return;
     }
 
-  vtkMRMLEMSTargetNode *inputNodes = this->mrmlManager()->GetTargetInputNode();
+  //vtkMRMLEMSTargetNode *inputNodes = this->mrmlManager()->GetTargetInputNode();
+  vtkMRMLEMSVolumeCollectionNode *inputNodes = this->mrmlManager()->GetTargetInputNode();
   if (!inputNodes)
     {
     logger.warn("updateWidgetFromMRML - inputNodes is NULL");
     return;
     }
 
+  vtkMRMLEMSGlobalParametersNode* globalNode = this->mrmlManager()->GetGlobalParametersNode();
+
   // Loop through input nodes and update or insert row
   for (int rowId = 0; rowId < inputNodes->GetNumberOfVolumes(); rowId++)
     {
-    QString inputChannelName = QLatin1String(inputNodes->GetNthInputChannelName(rowId));
+    //QString inputChannelName = QLatin1String(inputNodes->GetNthInputChannelName(rowId));
+    QString inputChannelName = QLatin1String(globalNode->GetNthTargetInputChannelName(rowId));
     vtkMRMLVolumeNode * volumeNode = inputNodes->GetNthVolumeNode(rowId);
     Q_ASSERT(volumeNode);
 

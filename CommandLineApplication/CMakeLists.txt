@@ -20,6 +20,8 @@ endif(NOT Slicer3_SOURCE_DIR)
 # Include dirs
 
 include_directories(
+  ${EMSegment_BINARY_DIR}
+  ${EMSegment_SOURCE_DIR}/KWWidgets
   ${EMSegment_SOURCE_DIR}
   ${EMSegment_SOURCE_DIR}/MRML
   ${EMSegment_SOURCE_DIR}/Algorithm

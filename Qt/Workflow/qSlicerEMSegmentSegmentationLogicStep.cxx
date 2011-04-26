@@ -31,7 +31,7 @@
 #include <vtkEMSegmentMRMLManager.h>
 
 // EMSegment/Logic includes
-#include <vtkSlicerEMSegmentLogic.h>
+#include <vtkEMSegmentLogic.h>
 
 //-----------------------------------------------------------------------------
 /// \ingroup Slicer_QtModules_EMSegment
@@ -97,11 +97,11 @@ void qSlicerEMSegmentSegmentationLogicStep::onEntry(
 
   Q_ASSERT(this->mrmlManager());
 
-  vtkSlicerEMSegmentLogic* logic = this->emSegmentLogic();
+  vtkEMSegmentLogic* logic = this->emSegmentLogic();
   Q_ASSERT(logic);
 
   // make sure that data types are the same
-  if (!this->mrmlManager()->DoTargetAndAtlasDataTypesMatch())
+  if (!this->mrmlManager()->DoTargetAndAtlasDataTypesMatch(this->mrmlManager()->GetTargetInputNode(),this->mrmlManager()->GetAtlasInputNode()))
     {
     QMessageBox::critical(this->stepArea(), "EMSegmenter",
                          tr("Scalar type mismatch for input images.  All image scalar types must be the same (including input channels and atlas images)."));
@@ -110,7 +110,7 @@ void qSlicerEMSegmentSegmentationLogicStep::onEntry(
     }
 
   // start the segmentation
-  logic->StartSegmentationWithoutPreprocessing();
+  logic->StartSegmentationWithoutPreprocessingAndSaving();
 
   // Indicates that we are finished
   this->onEntryComplete();

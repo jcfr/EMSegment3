@@ -108,6 +108,9 @@ public:
   vtkGetMacro(PrintMFAWeightsConvergence, int);
   vtkSetMacro(PrintMFAWeightsConvergence, int);
 
+  vtkGetMacro(MFA2DFlag, int);
+  vtkSetMacro(MFA2DFlag, int);
+
   //
   // misc.
   //
@@ -146,6 +149,8 @@ protected:
   int                                 PrintEMWeightsConvergence;
   int                                 PrintMFALabelMapConvergence;
   int                                 PrintMFAWeightsConvergence;
+
+  int                                 MFA2DFlag;
 
   // misc.
   int                                 GenerateBackgroundProbability;

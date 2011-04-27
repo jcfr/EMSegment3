@@ -152,6 +152,9 @@ public:
   virtual void     UpdateIntensityDistributions();
 
   // Step 5
+  virtual int       GetTreeNodeInteractionMatrices2DFlag(vtkIdType nodeID);
+  virtual void    SetTreeNodeInteractionMatrices2DFlag(vtkIdType nodeID, int value);
+
 
   virtual int      GetTreeNodePrintWeight(vtkIdType nodeID);
   virtual void     SetTreeNodePrintWeight(vtkIdType nodeID, int shouldPrint);
@@ -284,6 +287,10 @@ public:
 
   virtual void      SetMinimumIslandSize(int value);
   virtual int       GetMinimumIslandSize();
+
+  virtual int       GetIsland2DFlag() ;
+  virtual void    SetIsland2DFlag(int) ;
+
 
   // target volumes
   virtual int         GetTargetNumberOfSelectedVolumes();

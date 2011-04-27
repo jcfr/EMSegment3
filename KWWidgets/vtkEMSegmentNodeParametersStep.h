@@ -56,6 +56,8 @@ public:
   virtual void NodeParametersPrintEMWeightsCallback(vtkIdType, int value);
   virtual void NodeParametersPrintMFALabelMapCallback(vtkIdType, int value);
   virtual void NodeParametersPrintMFAWeightsCallback(vtkIdType, int value);
+  virtual void NodeParametersInteractionMatrices2DCallback(vtkIdType sel_vol_id, int value);
+
   virtual void ExcludeIncompleteEStepCallback(vtkIdType, int state);
   virtual void GenerateBackgroundProbabilityCallback(vtkIdType, int state);
 
@@ -95,7 +97,9 @@ protected:
   vtkKWCheckButtonWithLabel          *NodeParametersPrintMFALabelMapConvergenceCheckButton;
   vtkKWCheckButtonWithLabel          *NodeParametersPrintMFAWeightsConvergenceCheckButton;
 
-  vtkKWFrameWithLabel                *NodeParametersInteractionMatricesFrame;
+  vtkKWFrameWithLabel                 *NodeParametersInteractionMatricesFrame;
+  vtkKWCheckButtonWithLabel      *NodeParametersInteractionMatrices2DCheckButton;
+
   vtkKWFrameWithLabel                *NodeParametersPCAFrame;
   vtkKWFrameWithLabel                *NodeParametersRegistrationFrame;
   vtkKWFrameWithLabel                *NodeParametersMiscellaeneousFrame;

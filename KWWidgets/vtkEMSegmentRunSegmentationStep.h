@@ -51,6 +51,7 @@ public:
   virtual void MultiThreadingCallback(int state);
   virtual void PostprocessingSubparcellationCallback(int state);
   virtual void PostprocessingMinimumIslandSizeCallback(float value);
+  virtual void PostprocessingIsland2DFlagCallback(int state);
 
   virtual void StartSegmentationCallback();
   virtual void CancelSegmentationCallback();
@@ -89,6 +90,7 @@ protected:
   vtkKWFrameWithLabel        *PostprocessingFrame;
   vtkKWScaleWithEntry        *PostprocessingMinimumIslandSize;
   vtkKWCheckButtonWithLabel  *PostprocessingSubparcellationCheckButton;
+  vtkKWCheckButtonWithLabel  *PostprocessingIsland2DCheckButton;
 
   // Description:
   // Populate the run segmentation boundary matrix 

@@ -78,6 +78,7 @@ this->RunSegmentationDirectoryLabel              = NULL;
   this->RunSegmentationMultiThreadCheckButton      = NULL;
   this->PostprocessingFrame = NULL;
   this->PostprocessingMinimumIslandSize = NULL;
+  this->PostprocessingIsland2DCheckButton = NULL;
   this->PostprocessingSubparcellationCheckButton = NULL;
 
   this->InitialROIWidget() ;
@@ -185,6 +186,12 @@ vtkEMSegmentRunSegmentationStep::~vtkEMSegmentRunSegmentationStep()
        this->PostprocessingMinimumIslandSize = NULL;
     } 
  
+  if (this->PostprocessingIsland2DCheckButton)
+    {
+      this->PostprocessingIsland2DCheckButton->Delete();
+      this->PostprocessingIsland2DCheckButton = NULL;
+    }
+
   if (this->PostprocessingSubparcellationCheckButton)
     {
        this->PostprocessingSubparcellationCheckButton->Delete();
@@ -456,6 +463,22 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
   this->PostprocessingMinimumIslandSize->SetValue(mrmlManager->GetMinimumIslandSize());
   this->Script("pack %s -side top -anchor nw -padx 2 -pady 2", this->PostprocessingMinimumIslandSize->GetWidgetName());
 
+  if (!this->PostprocessingIsland2DCheckButton)
+    {
+    this->PostprocessingIsland2DCheckButton = vtkKWCheckButtonWithLabel::New();
+    }
+  if (!this->PostprocessingIsland2DCheckButton->IsCreated())
+    {
+    this->PostprocessingIsland2DCheckButton->SetParent(this->PostprocessingFrame->GetFrame());
+    this->PostprocessingIsland2DCheckButton->Create();
+    this->PostprocessingIsland2DCheckButton->GetLabel()->SetWidth(EMSEG_WIDGETS_LABEL_WIDTH);
+    this->PostprocessingIsland2DCheckButton->SetLabelText("2D Island Neighborhood :");
+    this->PostprocessingIsland2DCheckButton->GetWidget()->SetCommand(this, "PostprocessingIsland2DFlagCallback");
+    }
+  this->PostprocessingIsland2DCheckButton->SetEnabled(mrmlManager->HasGlobalParametersNode() ? enabled : 0);
+  this->PostprocessingIsland2DCheckButton->GetWidget()->SetSelectedState(mrmlManager->GetIsland2DFlag());
+  this->Script("pack %s -side top -anchor nw -padx 2 -pady 2", this->PostprocessingIsland2DCheckButton->GetWidgetName());
+
   // Create the run frame
   if (!this->RunSegmentationMiscFrame)
     {
@@ -706,6 +729,15 @@ void vtkEMSegmentRunSegmentationStep::PostprocessingMinimumIslandSizeCallback(fl
     }
 }
 
+//----------------------------------------------------------------------------
+void vtkEMSegmentRunSegmentationStep::PostprocessingIsland2DFlagCallback(int state)
+{
+  vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
+  if (mrmlManager)
+    {
+      mrmlManager->SetIsland2DFlag(state);
+    }
+}
 
 //----------------------------------------------------------------------------
 void vtkEMSegmentRunSegmentationStep::MultiThreadingCallback(int state)

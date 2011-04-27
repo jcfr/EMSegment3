@@ -67,6 +67,8 @@ vtkEMSegmentNodeParametersStep::vtkEMSegmentNodeParametersStep()
   this->NodeParametersPrintMFAWeightsConvergenceCheckButton = NULL;
 
   this->NodeParametersInteractionMatricesFrame = NULL;
+  this->NodeParametersInteractionMatrices2DCheckButton   = NULL;
+
   this->NodeParametersPCAFrame                 = NULL;
   this->NodeParametersRegistrationFrame        = NULL;
   this->NodeParametersMiscellaeneousFrame      = NULL;
@@ -264,6 +266,12 @@ vtkEMSegmentNodeParametersStep::~vtkEMSegmentNodeParametersStep()
     {
     this->NodeParametersInteractionMatricesFrame->Delete();
     this->NodeParametersInteractionMatricesFrame = NULL;
+    }
+
+  if (this->NodeParametersInteractionMatrices2DCheckButton)
+    {
+        this->NodeParametersInteractionMatrices2DCheckButton->Delete();
+        this->NodeParametersInteractionMatrices2DCheckButton   = NULL;
     }
 
   if (this->NodeParametersPCAFrame)
@@ -466,7 +474,7 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
     this->NodeParametersAlphaScale->PopupModeOn();
     this->NodeParametersAlphaScale->Create();
     this->NodeParametersAlphaScale->SetEntryWidth(4);
-    this->NodeParametersAlphaScale->SetLabelText("Alpha:");
+    this->NodeParametersAlphaScale->SetLabelText("MFA Weight:");
     this->NodeParametersAlphaScale->GetLabel()->
       SetWidth(EMSEG_WIDGETS_LABEL_WIDTH - 9);
     this->NodeParametersAlphaScale->SetRange(0.0, 1.0);
@@ -927,8 +935,25 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
     this->NodeParametersInteractionMatricesFrame->SetParent(advanced_page);
     this->NodeParametersInteractionMatricesFrame->Create();
     this->NodeParametersInteractionMatricesFrame->SetLabelText(
-      "Class Interaction Matrices");
+      "Mean Field Parameters");
     }
+
+ if (!this->NodeParametersInteractionMatrices2DCheckButton)
+    {
+    this->NodeParametersInteractionMatrices2DCheckButton = vtkKWCheckButtonWithLabel::New();
+    }
+  if (!this->NodeParametersInteractionMatrices2DCheckButton->IsCreated())
+    {
+      this->NodeParametersInteractionMatrices2DCheckButton->SetParent( this->NodeParametersInteractionMatricesFrame->GetFrame());
+    this->NodeParametersInteractionMatrices2DCheckButton->Create();
+    this->NodeParametersInteractionMatrices2DCheckButton->SetLabelText("2D Neighborhood:");
+    this->NodeParametersInteractionMatrices2DCheckButton->SetLabelWidth( EMSEG_WIDGETS_LABEL_WIDTH-10);
+    }
+
+  this->Script("pack %s -side top -anchor nw -padx 2 -pady 2", 
+               this->NodeParametersInteractionMatrices2DCheckButton->GetWidgetName());
+
+
 
   // Create the frame
 
@@ -1232,34 +1257,33 @@ void vtkEMSegmentNodeParametersStep::DisplaySelectedNodeParametersCallback()
     menu->DeleteAllItems();
     if (has_valid_selection && !sel_is_leaf_node)
       {
-      this->StoppingConditionsEMMenuButton->SetEnabled(tree->GetEnabled());
-      sprintf(buffer, "StoppingConditionsEMCallback %d %d", 
+        this->StoppingConditionsEMMenuButton->SetEnabled(tree->GetEnabled());
+        sprintf(buffer, "StoppingConditionsEMCallback %d %d", 
               static_cast<int>(sel_vol_id), 
               vtkEMSegmentMRMLManager::StoppingConditionIterations);
-      menu->AddRadioButton("Iterations", this, buffer);
-      sprintf(buffer, "StoppingConditionsEMCallback %d %d", 
+        menu->AddRadioButton("Iterations", this, buffer);
+        sprintf(buffer, "StoppingConditionsEMCallback %d %d", 
               static_cast<int>(sel_vol_id),
               vtkEMSegmentMRMLManager::StoppingConditionLabelMapMeasure);
-      menu->AddRadioButton("Label Map", this, buffer);
-      sprintf(buffer, "StoppingConditionsEMCallback %d %d", 
+        menu->AddRadioButton("Label Map", this, buffer);
+        sprintf(buffer, "StoppingConditionsEMCallback %d %d", 
               static_cast<int>(sel_vol_id), 
               vtkEMSegmentMRMLManager::StoppingConditionWeightsMeasure);
-      menu->AddRadioButton("Weights", this, buffer);
-      vtksys_stl::string value;
-      switch (mrmlManager->GetTreeNodeStoppingConditionEMType(sel_vol_id))
+        menu->AddRadioButton("Weights", this, buffer);
+        vtksys_stl::string value;
+        switch (mrmlManager->GetTreeNodeStoppingConditionEMType(sel_vol_id))
         {
-        case vtkEMSegmentMRMLManager::StoppingConditionIterations:
-          value = "Iterations";
-          break;
-        case vtkEMSegmentMRMLManager::StoppingConditionLabelMapMeasure:
-          value = "Label Map";
-          break;
-        case vtkEMSegmentMRMLManager::StoppingConditionWeightsMeasure:
-          value = "Weights";
-          break;
+            case vtkEMSegmentMRMLManager::StoppingConditionIterations:
+               value = "Iterations";
+               break;
+            case vtkEMSegmentMRMLManager::StoppingConditionLabelMapMeasure:
+              value = "Label Map";
+              break;
+           case vtkEMSegmentMRMLManager::StoppingConditionWeightsMeasure:
+             value = "Weights";
+             break;
         }
-      this->StoppingConditionsEMMenuButton->GetWidget()->SetValue(
-        value.c_str());
+      this->StoppingConditionsEMMenuButton->GetWidget()->SetValue(value.c_str());
       }
     else
       {
@@ -1718,6 +1742,28 @@ void vtkEMSegmentNodeParametersStep::DisplaySelectedNodeParametersCallback()
       this->Script(
         "pack forget %s", 
         this->NodeParametersInteractionMatricesFrame->GetWidgetName());
+      }
+    }
+
+  if (this->NodeParametersInteractionMatrices2DCheckButton)
+    {
+      vtkKWCheckButton *cb =  this->NodeParametersInteractionMatrices2DCheckButton->GetWidget();
+       if (has_valid_selection && !sel_is_leaf_node)
+       {
+      sprintf(buffer, "NodeParametersInteractionMatrices2DCallback %d", 
+              static_cast<int>(sel_vol_id));
+      cb->SetCommand(this, buffer);
+      cb->SetSelectedState(mrmlManager->GetTreeNodeInteractionMatrices2DFlag(sel_vol_id));
+      this->Script("pack %s -side top -anchor nw -padx 2 -pady 2", 
+        this->NodeParametersInteractionMatrices2DCheckButton->GetWidgetName());
+      } 
+    else
+      {
+      cb->SetCommand(NULL, NULL);
+      cb->SetSelectedState(0);
+      this->Script(
+        "pack forget %s", 
+        this->NodeParametersInteractionMatrices2DCheckButton->GetWidgetName());
       }
     }
 
@@ -2539,3 +2585,15 @@ void vtkEMSegmentNodeParametersStep::DefineClassOverviewWeightWindow(vtkIdType s
 
 }
 
+//----------------------------------------------------------------------------
+void vtkEMSegmentNodeParametersStep::NodeParametersInteractionMatrices2DCallback(
+  vtkIdType sel_vol_id, int value)
+{
+  // The print weight has changed because of user interaction
+
+  vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
+  if (mrmlManager)
+    {
+    mrmlManager->SetTreeNodeInteractionMatrices2DFlag(sel_vol_id, value);
+    }
+}

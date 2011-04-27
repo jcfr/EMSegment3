@@ -5063,7 +5063,54 @@ void vtkEMSegmentMRMLManager::ImportMRMLFile(const char *mrmlFile,  vtksys_stl::
 
 }
 
+//----------------------------------------------------------------------------
 void  vtkEMSegmentMRMLManager::SetStorageNodeToNULL(vtkMRMLStorableNode* sNode) 
 {
     sNode-> SetAndObserveStorageNodeID(NULL);
 }
+
+//----------------------------------------------------------------------------
+int  vtkEMSegmentMRMLManager::GetIsland2DFlag() 
+ {
+   return this->GetGlobalParametersNode() ? this->GetGlobalParametersNode()->GetIsland2DFlag() : 0;
+ }
+
+//----------------------------------------------------------------------------  
+void    vtkEMSegmentMRMLManager::SetIsland2DFlag(int flag) 
+{
+  if (!this->GetGlobalParametersNode())
+    {
+      vtkErrorMacro("GlobalParametersNode is not defined"); 
+      return ;
+    } 
+   this->GetGlobalParametersNode()->SetIsland2DFlag(flag);
+}
+
+//----------------------------------------------------------------------------
+int vtkEMSegmentMRMLManager::GetTreeNodeInteractionMatrices2DFlag(vtkIdType nodeID)
+{
+  vtkMRMLEMSTreeNode* n = this->GetTreeNode(nodeID);
+  if (n == NULL || !n->GetParentParametersNode() )
+    {
+    vtkErrorMacro("Tree node is null for nodeID: " << nodeID << " or not a parent node");
+    return 0;
+    }
+  return n->GetParentParametersNode()->GetMFA2DFlag();  
+}
+
+//----------------------------------------------------------------------------
+
+void
+vtkEMSegmentMRMLManager::
+SetTreeNodeInteractionMatrices2DFlag(vtkIdType nodeID, int flag)
+{
+  vtkMRMLEMSTreeNode* n = this->GetTreeNode(nodeID);
+  if (n == NULL || !n->GetParentParametersNode())
+    {
+      vtkErrorMacro("Tree node is null for nodeID: " << nodeID <<  " or not a parent node");
+    return;
+    }
+
+  n->GetParentParametersNode()->SetMFA2DFlag(flag);
+}
+

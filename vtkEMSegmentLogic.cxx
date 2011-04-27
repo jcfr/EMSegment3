@@ -842,18 +842,13 @@ CopyTreeDataToSegmenter(vtkImageEMLocalSuperClass* node, vtkIdType nodeID)
   // need this here because the vtkImageEM* classes don't use
   // virtual functions and so failed initializations lead to
   // memory errors
-  node->SetNumInputImages(this->MRMLManager->
-                          GetTargetNumberOfSelectedVolumes());
+  node->SetNumInputImages(this->MRMLManager->GetTargetNumberOfSelectedVolumes());
 
   // copy generic tree node data to segmenter
   this->CopyTreeGenericDataToSegmenter(node, nodeID);
   
-  // copy parent specific tree node data to segmenter
-  this->CopyTreeParentDataToSegmenter(node, nodeID);
-
   // add children
-  unsigned int numChildren = 
-    this->MRMLManager->GetTreeNodeNumberOfChildren(nodeID);
+  unsigned int numChildren = this->MRMLManager->GetTreeNodeNumberOfChildren(nodeID);
   double totalProbability = 0.0;
   for (unsigned int i = 0; i < numChildren; ++i)
     {
@@ -892,19 +887,10 @@ CopyTreeDataToSegmenter(vtkImageEMLocalSuperClass* node, vtkIdType nodeID)
                     << " they sum to " << totalProbability);
     }
 
-  // Set Markov matrices
-  const unsigned int numDirections = 6;
-  for (unsigned int d = 0; d < numDirections; ++d)
-    {
-    for (unsigned int r = 0; r < numChildren; ++r)
-      {
-      for (unsigned int c = 0; c < numChildren; ++c)
-        {
-          double val = (r == c ? 1.0 : 0.0);
-          node->SetMarkovMatrix(val, d, c, r);
-        }
-      }
-    }
+  // copy other parent specific tree node data to segmenter
+  // Do it after all classes are added so that number of children are set correctly - Important for mrf 
+  this->CopyTreeParentDataToSegmenter(node, nodeID);
+
   node->Update();
 }
 
@@ -1073,7 +1059,48 @@ CopyTreeParentDataToSegmenter(vtkImageEMLocalSuperClass* node,
   // New in 3.6. : Alpha now reflects user interface and is now correctly set for each parent node
   // cout << "Alpha setting for " << this->MRMLManager->GetTreeNodeName(nodeID) << " " << this->MRMLManager->GetTreeNodeAlpha(nodeID) << endl;
   node->SetAlpha(this->MRMLManager->GetTreeNodeAlpha(nodeID)); 
+  vtkIndent indent;
+
+  // Set Markov matrices
+  // this should already be set correctly 
+  int numChildren = node->GetNumClasses();
+  if ( this->MRMLManager->GetTreeNodeNumberOfChildren(nodeID) != numChildren)
+    {
+      vtkErrorMacro("Please sync number of classes of this node with the entry in MRMLManager before calling this function");
+      return;
+    }
+
+  const int numDirections = 6;  
+  int MFA2DFlag = this->MRMLManager->GetTreeNodeInteractionMatrices2DFlag(nodeID);
+  if (MFA2DFlag) 
+  {
+    cout << "MFA 2D Interaction Flag is activated for node " << this->MRMLManager->GetTreeNodeName(nodeID) << endl; 
+  }
+  for ( int d = 0; d < numDirections; ++d)
+    {
+    for (int r = 0; r < numChildren; ++r)
+      {
+      for (int c = 0; c < numChildren; ++c)
+        {
+          double val = 0;
+      // Depending if we want to have 2D or 3D neighborhood the flag is set differently 
+          if (r == c) {
+        // in 2D do not set up and down 
+            if (!MFA2DFlag || ((d%3) != 2 ))
+          {             
+              val = 1;
+          }
+      }
+          node->SetMarkovMatrix(val, d, c, r);
+        }
+      }
+    }
+
+
+  node->PrintSelf(cout , indent);
+
                       
+
 }
 
 //-----------------------------------------------------------------------------
@@ -1971,7 +1998,15 @@ int vtkEMSegmentLogic::StartSegmentationWithoutPreprocessingAndSaving()
      vtkImageIslandFilter* islandFilter = vtkImageIslandFilter::New();
      islandFilter->SetInput(input);
      islandFilter->SetIslandMinSize(this->GetMRMLManager()->GetMinimumIslandSize());
-     islandFilter->SetNeighborhoodDim3D();
+     if  ( this->GetMRMLManager()->GetIsland2DFlag() )
+       {
+            islandFilter->SetNeighborhoodDim2D();
+           vtkstd::cout << "2D Neighborhood Island activated" << vtkstd::endl;
+       }
+     else 
+       {
+           islandFilter->SetNeighborhoodDim3D();
+       }
      islandFilter->SetPrintInformation(1);
      islandFilter->Update();
      postProcessing->DeepCopy(islandFilter->GetOutput());

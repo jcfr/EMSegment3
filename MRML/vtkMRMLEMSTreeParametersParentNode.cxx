@@ -60,6 +60,7 @@ vtkMRMLEMSTreeParametersParentNode::vtkMRMLEMSTreeParametersParentNode()
   this->PrintEMWeightsConvergence     = 0;
   this->PrintMFALabelMapConvergence   = 0;
   this->PrintMFAWeightsConvergence    = 0;
+  this->MFA2DFlag = 0;
 
   this->GenerateBackgroundProbability = 0;
 
@@ -114,6 +115,8 @@ void vtkMRMLEMSTreeParametersParentNode::WriteXML(ostream& of, int nIndent)
 
   of << indent << "PrintMFAWeightsConvergence=\"" 
      << this->PrintEMWeightsConvergence << "\" ";
+
+  of << indent << "MFA2DFlag=\"" << this->MFA2DFlag << "\" ";
 
   of << indent << "GenerateBackgroundProbability=\"" 
      << this->GenerateBackgroundProbability << "\" ";
@@ -236,6 +239,12 @@ void vtkMRMLEMSTreeParametersParentNode::ReadXMLAttributes(const char** attrs)
       ss << val;
       ss >> this->PrintMFAWeightsConvergence;
       }
+    else if (!strcmp(key, "MFA2DFlag"))
+      {
+      vtksys_stl::stringstream ss;
+      ss << val;
+      ss >> this->MFA2DFlag;
+      }
     else if (!strcmp(key, "GenerateBackgroundProbability"))
       {
       vtksys_stl::stringstream ss;
@@ -273,6 +282,7 @@ void vtkMRMLEMSTreeParametersParentNode::Copy(vtkMRMLNode *rhs)
   this->SetPrintEMWeightsConvergence(node->PrintEMWeightsConvergence);
   this->SetPrintMFALabelMapConvergence(node->PrintMFALabelMapConvergence);
   this->SetPrintMFAWeightsConvergence(node->PrintMFAWeightsConvergence);
+  this->SetMFA2DFlag(node->MFA2DFlag);
   this->SetGenerateBackgroundProbability(node->GenerateBackgroundProbability);
 }
 
@@ -313,6 +323,8 @@ void vtkMRMLEMSTreeParametersParentNode::PrintSelf(ostream& os,
      << this->PrintEMLabelMapConvergence << "\n";
   os << indent << "PrintMFAWeightsConvergence: " 
      << this->PrintEMWeightsConvergence << "\n";
+  os << indent << "MFA2DFlag: " 
+     << this->MFA2DFlag << "\n";
   os << indent << "GenerateBackgroundProbability: " 
      << this->GenerateBackgroundProbability << "\n";
 }

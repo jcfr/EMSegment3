@@ -2,7 +2,7 @@
 #ifndef __vtkEMSegmentWin32Header_h
 #define __vtkEMSegmentWin32Header_h
 
-#if !defined(Slicer3_USE_QT)
+#if !defined(Slicer_USE_QT)
 
 #include <vtkEMSegmentConfigure.h>
 

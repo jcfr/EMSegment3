@@ -19,6 +19,7 @@ SET(module_logic_include_directories
   #${EMSegmentRegistration_BINARY_DIR}
   ${EMSegment_SOURCE_DIR}
   ${EMSegment_BINARY_DIR}
+  ${vtkSlicerVolumesModuleLogic_BINARY_DIR}
   )
 
 # Source files

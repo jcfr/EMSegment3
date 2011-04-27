@@ -34,7 +34,7 @@ SET(module_logic_SRCS
 SET(module_logic_target_libraries
   #EMSegmentMRML
   #EMSegmentRegistration
-  vtkSlicerVolumesModuleLogic
+  #vtkSlicerVolumesModuleLogic
   )
 
 

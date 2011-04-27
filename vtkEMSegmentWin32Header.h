@@ -18,7 +18,6 @@
 #else
 #define VTK_EMSEGMENT_EXPORT 
 #endif
-#endif
 
 #else
 
@@ -32,6 +31,7 @@
 #else
 #define VTK_EMSEGMENT_EXPORT
 #endif
-#endif
 
 #endif // only do this stuff if this is not Slicer4
+
+#endif

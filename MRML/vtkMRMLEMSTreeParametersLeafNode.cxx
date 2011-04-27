@@ -487,8 +487,14 @@ MoveNthTargetInputChannel(int fromIndex, int toIndex)
 }
 
 //-----------------------------------------------------------------------------
-double vtkMRMLEMSTreeParametersLeafNode::GetLogMean(int index) const
+double vtkMRMLEMSTreeParametersLeafNode::GetLogMean(int index) 
 {
+  int size = int(this->LogMean.size());
+  if (size <= index)
+    {
+      vtkErrorMacro("Index (" << index << ") surpasses size of logMean (" << size << ") !");
+      return -1;
+    }
   return this->LogMean[index];
 }
 
@@ -497,6 +503,12 @@ void
 vtkMRMLEMSTreeParametersLeafNode::
 SetLogMean(int index, double value)
 {
+  if (int(this->LogMean.size()) <= index)
+    {
+      vtkErrorMacro("Index (" << index << ") surpasses size of logMean (" << int(this->LogMean.size()) << ") !");
+      return;
+    }
+
   if (value != this->LogMean[index] ) 
     {
       this->LogMean[index] = value;
@@ -506,8 +518,13 @@ SetLogMean(int index, double value)
 
 
 //-----------------------------------------------------------------------------
-double vtkMRMLEMSTreeParametersLeafNode::GetLogMeanCorrection(int index) const
+double vtkMRMLEMSTreeParametersLeafNode::GetLogMeanCorrection(int index) 
 {
+    if (int(this->LogMeanCorrection.size()) <= index)
+    {
+      vtkErrorMacro("Index (" << index << ") surpasses size of logMeanCorrection (" << int(this->LogMeanCorrection.size()) << ") !");
+      return 0;
+    }
   return this->LogMeanCorrection[index];
 }
 
@@ -518,6 +535,12 @@ void
 vtkMRMLEMSTreeParametersLeafNode::
 SetLogMeanCorrection(int index, double value)
 {
+    if (int(this->LogMeanCorrection.size()) <= index)
+    {
+      vtkErrorMacro("Index (" << index << ") surpasses size of logMeanCorrection (" << int(this->LogMeanCorrection.size()) << ") !");
+      return;
+    }
+
   if (value != this->LogMeanCorrection[index] ) 
     {
       this->LogMeanCorrection[index] = value;
@@ -528,8 +551,13 @@ SetLogMeanCorrection(int index, double value)
 //-----------------------------------------------------------------------------
 double
 vtkMRMLEMSTreeParametersLeafNode::
-GetLogCovariance(int row, int column) const
+GetLogCovariance(int row, int column) 
 {
+  if ((int(this->LogCovariance.size()) <= row)  || (int(this->LogCovariance.size()) <= column)  )
+    {   
+      vtkErrorMacro("Row (" << row << ")  or column (" << column<< ") surpasses size of logCovariance (" << int(this->LogCovariance.size()) << " x " << int(this->LogCovariance.size()) << ") !");
+      return -1;
+    }
   return this->LogCovariance[row][column];
 }
 
@@ -538,6 +566,12 @@ void
 vtkMRMLEMSTreeParametersLeafNode::
 SetLogCovariance(int row, int column, double value)
 {
+  if ((int(this->LogCovariance.size()) <= row) || (int(this->LogCovariance.size()) <= column))
+    {
+      vtkErrorMacro("Row (" << row << ")  or column (" << column<< ") surpasses size of logCovariance (" << int(this->LogCovariance.size()) << " x " << int(this->LogCovariance.size()) << ") !");
+      return;
+    }
+
   if (value != this->LogCovariance[row][column])
     { 
       this->LogCovariance[row][column] = value;
@@ -548,8 +582,13 @@ SetLogCovariance(int row, int column, double value)
 //-----------------------------------------------------------------------------
 double
 vtkMRMLEMSTreeParametersLeafNode::
-GetLogCovarianceCorrection(int row, int column) const
+GetLogCovarianceCorrection(int row, int column) 
 {
+  if ((int(this->LogCovarianceCorrection.size()) <= row) || (int(this->LogCovarianceCorrection.size()) <= column))
+    {
+      vtkErrorMacro("Row (" << row << ")  or column (" << column<< ") surpasses size of logCovarianceCorrection (" << int(this->LogCovarianceCorrection.size()) << " x " << int(this->LogCovarianceCorrection.size()) << ") !");
+      return 0;
+    }
   return this->LogCovarianceCorrection[row][column];
 }
 
@@ -558,6 +597,11 @@ void
 vtkMRMLEMSTreeParametersLeafNode::
 SetLogCovarianceCorrection(int row, int column, double value)
 {
+   if ((int(this->LogCovarianceCorrection.size()) <= row) || (int(this->LogCovarianceCorrection.size()) <= column))
+    {
+      vtkErrorMacro("Row (" << row << ")  or column (" << column<< ") surpasses size of logCovarianceCorrection (" << int(this->LogCovarianceCorrection.size()) << " x " << int(this->LogCovarianceCorrection.size()) << ") !");
+      return;
+    }
   if (value != this->LogCovarianceCorrection[row][column])
     { 
       this->LogCovarianceCorrection[row][column] = value;

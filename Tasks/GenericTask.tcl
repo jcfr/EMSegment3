@@ -1298,7 +1298,6 @@ namespace eval EMSegmenterPreProcessingTcl {
             $node SetDynamicTemplateIterations $meanIterations
         }
 
-        #        $node SetLabelsList ""
         $node SetLabelsList $labels
 
         if { $nonRigid } {
@@ -1538,14 +1537,21 @@ namespace eval EMSegmenterPreProcessingTcl {
             set out [vtkMRMLTransformStorageNode New]
         } else {
             PrintError "WriteDataToTemporaryDir: Unkown type $Type"
-            return 0
+            return ""
         }
 
         $out SetScene $SCENE
         $out SetFileName $tmpName
+        if { [file exists $tmpName] && [file size $tmpName] == 0 } {
+            # remove empty file immediately before we write into it.
+            file delete $tmpName
+        } else {
+            PrintError "tried to overwrite a non-empty existing file"
+            return ""
+        }
         set FLAG [$out WriteData $Node]
         $out Delete
-        if  { $FLAG == 0 } {
+        if { $FLAG == 0 } {
             PrintError "WriteDataToTemporaryDir: could not write file $tmpName"
             return ""
         }
@@ -1633,9 +1639,18 @@ namespace eval EMSegmenterPreProcessingTcl {
         set RemoveFiles "$RemoveFiles \"$outputVolumeFileName\""
         if { $outputVolumeFileName == "" } { return "" }
 
+
+
         set PLUGINS_DIR "[$::slicer3::Application GetPluginsDir]"
 
+        # First BRAINSFit call
+
         set CMD "\"${PLUGINS_DIR}/BRAINSFit\""
+
+        # Filter options - just set it here to make sure that if default values are changed this still works as it supposed to
+        set CMD "$CMD --backgroundFillValue $backgroundLevel"
+        set CMD "$CMD --interpolationMode Linear"
+        set CMD "$CMD --outputVolumePixelType [BRAINSGetPixelTypeFromVolumeNode $fixedVolumeNode]"
 
         set CMD "$CMD --fixedVolume \"$fixedVolumeFileName\""
         set CMD "$CMD --movingVolume \"$movingVolumeFileName\""
@@ -1643,36 +1658,56 @@ namespace eval EMSegmenterPreProcessingTcl {
 
         # Do not worry about fileExtensions=".mat" type="linear" reference="movingVolume"
         # these are set in vtkCommandLineModuleLogic.cxx automatically
-        set transformNode [vtkMRMLLinearTransformNode New]
-        $transformNode SetName "EMSegmentLinearTransform"
-        $SCENE AddNode $transformNode
-        set transID [$transformNode GetID]
-        set linearTransformFileName [CreateTemporaryFileNameForNode $transformNode]
-        set CMD "$CMD --outputTransform \"$linearTransformFileName\""
+        if {  $deformableType != 0 } {
+            set transformNode [vtkMRMLBSplineTransformNode New]
+            $transformNode SetName "EMSegmentBSplineTransform"
+            $SCENE AddNode $transformNode
+            set transID [$transformNode GetID]
+            set outputTransformFileName [CreateTemporaryFileNameForNode $transformNode]
+            set CMD "$CMD --bsplineTransform \"$outputTransformFileName\""
+        } else {
+            set transformNode [vtkMRMLLinearTransformNode New]
+            $transformNode SetName "EMSegmentLinearTransform"
+            $SCENE AddNode $transformNode
+            set transID [$transformNode GetID]
+            set outputTransformFileName [CreateTemporaryFileNameForNode $transformNode]
+            set CMD "$CMD --outputTransform \"$outputTransformFileName\""
+        }
         $transformNode Delete
-        set RemoveFiles "$RemoveFiles \"$linearTransformFileName\""
+        set RemoveFiles "$RemoveFiles \"$outputTransformFileName\""
 
-        set CMD "$CMD --outputVolumePixelType [BRAINSGetPixelTypeFromVolumeNode $fixedVolumeNode]"
 
-        # Filter options - just set it here to make sure that if default values are changed this still works as it supposed to
-        set CMD "$CMD --backgroundFillValue $backgroundLevel"
-        set CMD "$CMD --interpolationMode Linear"
-        #        set CMD "$CMD --maskProcessingMode ROIAUTO"
-        #        set CMD "$CMD --ROIAutoDilateSize 3.0"
-        #        set CMD "$CMD --maskInferiorCutOffFromCenter 65.0"
+#        if { $affineType == [$mrmlManager GetRegistrationTypeFromString RegistrationTest] } {
+#            set CMD "$CMD --numberOfIterations 3    --numberOfSamples 100"
+#        } elseif { $affineType == [$mrmlManager GetRegistrationTypeFromString RegistrationFast] } {
+#            set CMD "$CMD --numberOfIterations 1500 --numberOfSamples 1000"
+#        } elseif { $affineType == [$mrmlManager GetRegistrationTypeFromString RegistrationSlow] } {
+#            set CMD "$CMD --numberOfIterations 1500 --numberOfSamples 300000"
+#        } else {
+#            PrintError "BRAINSRegistration: Unknown affineType: $affineType"
+#            return ""
+#        }
 
-        if { $affineType == [$mrmlManager GetRegistrationTypeFromString RegistrationTest] } {
+        if { $deformableType == [$mrmlManager GetRegistrationTypeFromString RegistrationTest] } {
             set CMD "$CMD --numberOfIterations 3    --numberOfSamples 100"
-        } elseif { $affineType == [$mrmlManager GetRegistrationTypeFromString RegistrationFast] } {
-            set CMD "$CMD --numberOfIterations 1500 --numberOfSamples 1000"
-        } elseif { $affineType == [$mrmlManager GetRegistrationTypeFromString RegistrationSlow] } {
+        } elseif { $deformableType == [$mrmlManager GetRegistrationTypeFromString RegistrationFast] } {
+            set CMD "$CMD --numberOfIterations 500  --numberOfSamples 30000"
+        } elseif { $deformableType == [$mrmlManager GetRegistrationTypeFromString RegistrationSlow] } {
             set CMD "$CMD --numberOfIterations 1500 --numberOfSamples 300000"
         } else {
-            PrintError "BRAINSRegistration: Unknown affineType: $affineType"
+            PrintError "BRAINSRegistration: Unknown deformableType: $deformableType"
             return ""
         }
 
+
+
         set CMD "$CMD --useRigid --useScaleSkewVersor3D --useAffine"
+        if { $deformableType != 0 } {
+          set CMD "$CMD --useBSpline"
+          set CMD "$CMD --splineGridSize 6,6,6"
+          set CMD "$CMD --maxBSplineDisplacement 0"
+          set CMD "$CMD --useCachingOfBSplineWeightsMode ON"
+        }
         set CMD "$CMD --initializeTransformMode useCenterOfHeadAlign"
         set CMD "$CMD --minimumStepLength 0.005"
         set CMD "$CMD --translationScale 1000"
@@ -1681,64 +1716,27 @@ namespace eval EMSegmenterPreProcessingTcl {
         set CMD "$CMD --maskProcessingMode NOMASK"
         set CMD "$CMD --numberOfHistogramBins 40"
         set CMD "$CMD --numberOfMatchPoints 10"
-        set CMD "$CMD --useCachingOfBSplineWeightsMode ON"
         set CMD "$CMD --costMetric MMI"
 
         set CMD "$CMD --fixedVolumeTimeIndex 0"
         set CMD "$CMD --movingVolumeTimeIndex 0"
         set CMD "$CMD --debugNumberOfThreads -1"
         set CMD "$CMD --debugLevel 0"
+        set CMD "$CMD --failureExitCode -1"
 
-        $LOGIC PrintText "TCL: Executing $CMD"
-        catch { eval exec $CMD } errmsg
-        $LOGIC PrintText "TCL: $errmsg"
+#        set CMD "$CMD --medianFilterSize 0,0,0"
+#        set CMD "$CMD --useExplicitPDFDerivativesMode AUTO"
+#        set CMD "$CMD --relaxationFactor 0.5"
+#        set CMD "$CMD --maximumStepLength 0.2"
+#        set CMD "$CMD --costFunctionConvergenceFactor 1e+9"
+#        set CMD "$CMD --projectedGradientTolerance 1e-5"
+#        set CMD "$CMD --maskProcessingMode ROIAUTO"
+#        set CMD "$CMD --ROIAutoDilateSize 3.0"
+#        set CMD "$CMD --maskInferiorCutOffFromCenter 65.0"
 
-        # deformable
+#        set CMD "$CMD --initialTransform \"$linearTransformFileName\""
+#        set CMD "$CMD --initializeTransformMode Off"
 
-        set CMD "\"${PLUGINS_DIR}/BRAINSFit\""
-
-        set CMD "$CMD --backgroundFillValue $backgroundLevel"
-        set CMD "$CMD --interpolationMode Linear"
-
-        set transformNode [vtkMRMLBSplineTransformNode New]
-        $transformNode SetName "EMSegmentBSplineTransform"
-        $SCENE AddNode $transformNode
-        set transID [$transformNode GetID]
-        set outputTransformFileName [CreateTemporaryFileNameForNode $transformNode]
-        $transformNode Delete
-        set RemoveFiles "$RemoveFiles \"$outputTransformFileName\""
-        set CMD "$CMD --bsplineTransform \"$outputTransformFileName\""
-
-        set CMD "$CMD --outputVolumePixelType [BRAINSGetPixelTypeFromVolumeNode $fixedVolumeNode]"
-
-        if { $deformableType == [$mrmlManager GetRegistrationTypeFromString RegistrationTest] } {
-            set CMD "$CMD --numberOfIterations 3    --numberOfSamples 100    --splineGridSize 6,6,6"
-        } elseif { $deformableType == [$mrmlManager GetRegistrationTypeFromString RegistrationFast] } {
-            set CMD "$CMD --numberOfIterations 1500 --numberOfSamples 300000 --splineGridSize 6,6,6"
-        } elseif { $deformableType == [$mrmlManager GetRegistrationTypeFromString RegistrationSlow] } {
-            set CMD "$CMD --numberOfIterations 1500 --numberOfSamples 300000 --splineGridSize 6,6,6"
-        } else {
-            PrintError "BRAINSRegistration: Unknown deformableType: $deformableType"
-            return ""
-        }
-
-        set CMD "$CMD --fixedVolume \"$fixedVolumeFileName\""
-        set CMD "$CMD --movingVolume \"$movingVolumeFileName\""
-        set CMD "$CMD --outputVolume \"$outputVolumeFileName\""
-
-        set CMD "$CMD --initialTransform \"$linearTransformFileName\""
-        set CMD "$CMD --initializeTransformMode Off"
-        set CMD "$CMD --useBSpline"
-        set CMD "$CMD --minimumStepLength 0.005"
-        set CMD "$CMD --translationScale 1000"
-        set CMD "$CMD --reproportionScale 1"
-        set CMD "$CMD --skewScale 1"
-        set CMD "$CMD --maskProcessingMode NOMASK"
-        set CMD "$CMD --numberOfHistogramBins 40"
-        set CMD "$CMD --numberOfMatchPoints 10"
-        set CMD "$CMD --useCachingOfBSplineWeightsMode ON"
-        set CMD "$CMD --costMetric MMI"
-        set CMD "$CMD --maxBSplineDisplacement 0"
 
         $LOGIC PrintText "TCL: Executing $CMD"
         catch { eval exec $CMD } errmsg

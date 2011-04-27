@@ -3504,31 +3504,28 @@ AddNewTreeNode()
 {
   // create parameters nodes and add them to the scene
   vtkMRMLEMSTreeParametersLeafNode* leafParametersNode = 
-    vtkMRMLEMSTreeParametersLeafNode::New();
+      vtkMRMLEMSTreeParametersLeafNode::New();
   leafParametersNode->SetHideFromEditors(this->HideNodesFromEditors);
   this->GetMRMLScene()->AddNode(leafParametersNode);
 
-  vtkMRMLEMSTreeParametersParentNode* parentParametersNode = 
-    vtkMRMLEMSTreeParametersParentNode::New();
-  parentParametersNode->SetHideFromEditors(this->HideNodesFromEditors);
-  this->GetMRMLScene()->AddNode(parentParametersNode);
-
-  //vtkMRMLEMSTreeParametersNode* treeParametersNode = 
-  //  vtkMRMLEMSTreeParametersNode::New();
-  //treeParametersNode->SetHideFromEditors(this->HideNodesFromEditors);
-  // this->GetMRMLScene()->AddNode(treeParametersNode);
+  // New node is always a child so no parent node needed
+//  vtkMRMLEMSTreeParametersParentNode* parentParametersNode = 
+//    vtkMRMLEMSTreeParametersParentNode::New();
+//  parentParametersNode->SetHideFromEditors(this->HideNodesFromEditors);
+//  this->GetMRMLScene()->AddNode(parentParametersNode);
 
   // create tree node and add it to the scene
   vtkMRMLEMSTreeNode* treeNode = vtkMRMLEMSTreeNode::New();
   treeNode->SetHideFromEditors(this->HideNodesFromEditors);
   this->GetMRMLScene()->AddNode(treeNode); // this adds id pair to map
 
-  // update memory
-  treeNode->SetNumberOfTargetInputChannels(this->GetTargetInputNode()->GetNumberOfVolumes());
-
   // add connections  
   treeNode->SetLeafParametersNodeID(leafParametersNode->GetID());
-  treeNode->SetParentParametersNodeID(parentParametersNode->GetID());
+
+  // update memory -leaf node must be defined before so that the following step is propagated 
+  int numInputChannel = this->GetTargetInputNode()->GetNumberOfVolumes();
+  treeNode->SetNumberOfTargetInputChannels(numInputChannel);
+
 
   // set the intensity label (in resulting segmentation) to the ID
   vtkIdType treeNodeID = this->MapMRMLNodeIDToVTKNodeID(treeNode->GetID());
@@ -3536,7 +3533,7 @@ AddNewTreeNode()
   
   // delete nodes
   leafParametersNode->Delete();
-  parentParametersNode->Delete();
+  // parentParametersNode->Delete();
   treeNode->Delete();
 
   return treeNodeID;

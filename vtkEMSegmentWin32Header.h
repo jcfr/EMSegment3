@@ -2,7 +2,9 @@
 #ifndef __vtkEMSegmentWin32Header_h
 #define __vtkEMSegmentWin32Header_h
 
-#ifndef EM_Slicer4_FOUND
+#include <vtkSlicerConfigure.h>
+
+#ifdef Slicer3_USE_KWWIDGETS
 
 #include <vtkEMSegmentConfigure.h>
 

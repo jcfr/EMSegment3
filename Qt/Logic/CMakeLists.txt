@@ -30,17 +30,12 @@ SET(module_logic_SRCS
   #vtkEMSegmentLogic.cxx
   )
 
-LINK_DIRECTORIES(
-  ${Slicer_BINARY_DIR}/lib/Slicer3/QTLoadableModules/
-)
-
 # Additional Target libraries
 SET(module_logic_target_libraries
   #EMSegmentMRML
   #EMSegmentRegistration
   vtkSlicerVolumesModuleLogic
   )
-
 
 SlicerMacroBuildModuleLogic(
   NAME ${module_logic_name}
